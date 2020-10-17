@@ -29,12 +29,16 @@ extern int sUp_cmd(int argc, char **argv);
 //extern int stop_cmd(int argc, char **argv);
 extern int getSta_cmd(int argc, char **argv);
 extern int getSta_cmd_remote(char* response);
+void *robot_communications_thread_handler(void *arg);
+void *robot_logic_thread_handler(void *arg);
 
 //Declaring variables
 uint8_t buf[16];
 int moving_direction;
 int energy;
 int num_survivors;
+char com_thread_stack[THREAD_STACKSIZE_MAIN];
+char logic_thread_stack[THREAD_STACKSIZE_MAIN];
 struct Point position;
 struct Point survivors_list[3];
 struct Point survivors_found[3];
@@ -51,6 +55,8 @@ static const shell_command_t shell_commands[] = {
 	//{"getSta", "", getSta_cmd},
 	{NULL, NULL, NULL}
 };
+
+
 
 int main(void)
 {
@@ -87,15 +93,30 @@ int main(void)
 		}
 
 		//Setup communication thread
+		thread_create(com_thread_stack, sizeof(com_thread_stack), THREAD_PRIORITY_MAIN - 1,
+			THREAD_CREATE_STACKTEST, robot_communications_thread_handler,
+			NULL, "communication thread");
 
-
-		//Setup robot logic loop
-
+		//Setup robot logic loop thread
+		thread_create(logic_thread_stack, sizeof(logic_thread_stack), THREAD_PRIORITY_MAIN - 1,
+			THREAD_CREATE_STACKTEST, robot_logic_thread_handler,
+			NULL, "logic thread");
 
     puts("Shell running");
 		char line_buf[SHELL_DEFAULT_BUFSIZE];
 		shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
     return 0;
+}
+
+void *robot_communications_thread_handler(void *arg){
+	(void)arg;
+	printf("%p\n", arg);
+	return NULL;
+}
+
+void *robot_logic_thread_handler(void *arg){
+	(void)arg;
+	return NULL;
 }
 
 int sUp_cmd(int argc, char **argv){
