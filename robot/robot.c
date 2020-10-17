@@ -116,6 +116,51 @@ void *robot_communications_thread_handler(void *arg){
 
 void *robot_logic_thread_handler(void *arg){
 	(void)arg;
+	while(1){
+		//Wait 1 second and then move.
+		xtimer_sleep(1);
+		switch (moving_direction) {
+			case 1:
+				if (position.y == 0){
+					moving_direction = DIRECTION_STOP;
+					break;
+				}
+				position.y -= 1;
+				printf("(%d, %d)", position.x, position.y);
+				break;
+
+			case 2:
+				if (position.y == border.y){
+					moving_direction = DIRECTION_STOP;
+					break;
+				}
+				position.y += 1;
+				printf("(%d, %d)", position.x, position.y);
+				break;
+
+			case 3:
+				if (position.x == 0){
+					moving_direction = DIRECTION_STOP;
+					break;
+				}
+				position.x -= 1;
+				printf("(%d, %d)", position.x, position.y);
+				break;
+
+			case 4:
+				if (position.x == border.x){
+					moving_direction = DIRECTION_STOP;
+					break;
+				}
+				position.x += 1;
+				printf("(%d, %d)", position.x, position.y);
+				break;
+
+			case 0:
+				printf("(%d, %d (%s))", position.x, position.y, "stationary");
+				break;
+		}
+	}
 	return NULL;
 }
 
