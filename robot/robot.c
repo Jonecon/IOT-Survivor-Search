@@ -34,11 +34,11 @@ extern int getSta_cmd_remote(char* response);
 uint8_t buf[16];
 int moving_direction;
 int energy;
-int positionX;
-int positionY;
 int num_survivors;
+struct Point position;
 struct Point survivors_list[3];
 struct Point survivors_found[3];
+struct Point border;
 
 
 static const shell_command_t shell_commands[] = {
@@ -53,6 +53,18 @@ static const shell_command_t shell_commands[] = {
 
 int main(void)
 {
+		//Setup variables to map
+		energy = ENERGY;
+		position.x = 10;
+		position.y = 10;
+		border.x = NUM_LINES;
+		border.y = NUM_COLUMNS;
+
+		//Setup communication thread
+
+
+		//Setup robot logic loop
+
 
     puts("Shell running");
 		char line_buf[SHELL_DEFAULT_BUFSIZE];
@@ -81,7 +93,7 @@ int sUp_cmd_remote(char* response){
 int getSta_cmd_remote(char* response){
 	char str[128];
 	int i;
-	sprintf(str, "STATUS robot ENERGY %d at (%d, %d) and direction %d, survivors: ", energy, positionX, positionY, moving_direction);
+	sprintf(str, "STATUS robot ENERGY %d at (%d, %d) and direction %d, survivors: ", energy, position.x, position.y, moving_direction);
 	strcat(response, str);
 	for (i=0; i<num_survivors && survivors_list[i].x != NUM_LINES; i++){
 		sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
