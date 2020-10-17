@@ -23,12 +23,13 @@ struct Point {
 //Declaring functions
 extern int _gnrc_netif_config(int argc, char **argv);
 extern int sUp_cmd(int argc, char **argv);
-//extern int sDown_cmd(int argc, char **argv);
-//extern int sLeft_cmd(int argc, char **argv);
-//extern int sRight_cmd(int argc, char **argv);
-//extern int stop_cmd(int argc, char **argv);
+extern int sDown_cmd(int argc, char **argv);
+extern int sLeft_cmd(int argc, char **argv);
+extern int sRight_cmd(int argc, char **argv);
+extern int stop_cmd(int argc, char **argv);
 extern int getSta_cmd(int argc, char **argv);
 extern int getSta_cmd_remote(char* response);
+extern int sUp_cmd_remote(char* response);
 void *robot_communications_thread_handler(void *arg);
 void *robot_logic_thread_handler(void *arg);
 
@@ -48,11 +49,11 @@ struct Point border;
 
 static const shell_command_t shell_commands[] = {
 	{"sUp", "Starts the robot moving in the direction UP", sUp_cmd},
-	//{"sDown", "", sDown_cmd},
-	//{"sLeft", "", sLeft_cmd},
-	//{"sRight", "", sRight_cmd},
-	//{"stop", "", stop_cmd},
-	//{"getSta", "", getSta_cmd},
+	{"sDown", "", sDown_cmd},
+	{"sLeft", "", sLeft_cmd},
+	{"sRight", "", sRight_cmd},
+	{"stop", "", stop_cmd},
+	{"getSta", "", getSta_cmd},
 	{NULL, NULL, NULL}
 };
 
@@ -170,17 +171,67 @@ int sUp_cmd(int argc, char **argv){
 		return 1;
 	}
 
+	//printf("Moving UP\n");
+	moving_direction = DIRECTION_UP;
+	return 0;
+}
+
+
+int sDown_cmd(int argc, char **argv){
+	if (argc != 1){
+		printf("usage: %s\n", argv[0]);
+		return 1;
+	}
+
+	//printf("Moving UP\n");
+	moving_direction = DIRECTION_DOWN;
+	return 0;
+}
+
+
+int sLeft_cmd(int argc, char **argv){
+	if (argc != 1){
+		printf("usage: %s\n", argv[0]);
+		return 1;
+	}
+
+	//printf("Moving UP\n");
+	moving_direction = DIRECTION_LEFT;
+	return 0;
+}
+
+int sRight_cmd(int argc, char **argv){
+	if (argc != 1){
+		printf("usage: %s\n", argv[0]);
+		return 1;
+	}
+
+	//printf("Moving UP\n");
+	moving_direction = DIRECTION_RIGHT;
+	return 0;
+}
+
+
+int stop_cmd(int argc, char **argv){
+	if (argc != 1){
+		printf("usage: %s\n", argv[0]);
+		return 1;
+	}
+
 	printf("Moving UP\n");
 	moving_direction = DIRECTION_UP;
 	return 0;
 }
 
-int sUp_cmd_remote(char* response){
-	moving_direction = DIRECTION_UP;
-	getSta_cmd_remote(response);
+int getSta_cmd(int argc, char **argv){
+	if (argc != 1){
+		printf("usage: %s\n", argv[0]);
+		return 1;
+	}
+
+	printf("Energy: %d, Position: (%d, %d)\n", energy, position.x, position.y);
 	return 0;
 }
-
 
 int getSta_cmd_remote(char* response){
 	char str[128];
@@ -191,5 +242,35 @@ int getSta_cmd_remote(char* response){
 		sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
 		strcat(response, str);
 	}
+	return 0;
+}
+
+int sUp_cmd_remote(char* response){
+	moving_direction = DIRECTION_UP;
+	getSta_cmd_remote(response);
+	return 0;
+}
+
+int sDown_cmd_remote(char* response){
+	moving_direction = DIRECTION_DOWN;
+	getSta_cmd_remote(response);
+	return 0;
+}
+
+int sLeft_cmd_remote(char* response){
+	moving_direction = DIRECTION_LEFT;
+	getSta_cmd_remote(response);
+	return 0;
+}
+
+int sRight_cmd_remote(char* response){
+	moving_direction = DIRECTION_RIGHT;
+	getSta_cmd_remote(response);
+	return 0;
+}
+
+int stop_cmd_remote(char* response){
+	moving_direction = DIRECTION_STOP;
+	getSta_cmd_remote(response);
 	return 0;
 }
