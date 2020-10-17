@@ -38,6 +38,7 @@ int num_survivors;
 struct Point position;
 struct Point survivors_list[3];
 struct Point survivors_found[3];
+struct Point mines_list[MAX_MINES];
 struct Point border;
 
 
@@ -59,6 +60,31 @@ int main(void)
 		position.y = 10;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
+
+		//Setting up survivors pos variable.
+		char str[NUM_LINES * NUM_COLUMNS];
+		strcpy(str, SURVIVOR_LIST);
+		char* token = strtok(str, ",");
+		int id = 0;
+		while (token != NULL){
+			survivors_list[id].x = atoi(token);
+			token = strtok(NULL, ",");
+			survivors_list[id].y = atoi(token);
+			id++;
+			token = strtok(NULL, ",");
+		}
+
+		//Setting up mines pos variable
+		strcpy(str, MINES_LIST);
+		token = strtok(str, ",");
+		id = 0;
+		while (token != NULL){
+			mines_list[id].x = atoi(token);
+			token = strtok(NULL, ",");
+			mines_list[id].y = atoi(token);
+			id++;
+			token = strtok(NULL, ",");
+		}
 
 		//Setup communication thread
 
