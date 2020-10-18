@@ -81,8 +81,8 @@ int main(void)
 		//Setup variables to map
 		data.energy = ENERGY;
 		printf("%d\n", data.energy);
-		data.position.x = 10;
-		data.position.y = 10;
+		data.position.x = 0;
+		data.position.y = 0;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
 		//sem_init(&mutex, 0, 1);
@@ -281,13 +281,16 @@ void *robot_logic_thread_handler(void *arg){
 
 		//If we landed on a bomb
 		for (int i = 0; i < MAX_MINES; i++){
+			if (data.mines_list[i].x == 0 && data.mines_list[i] == 0){
+				break;
+			}
 			if (data.position.x == data.mines_list[i].x && data.position.y == data.mines_list[i].y){
 				printf("\n%s\n", "DEAD");
 				while (1){}
 			}
 		}
 		if (data.direction != 0){
-			data.energy -= 10;
+			data.energy -= 1;
 		}
 		mutex_unlock(&data.lock);
 	}
