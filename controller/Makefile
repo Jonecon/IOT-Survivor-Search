@@ -1,4 +1,3 @@
-
 # name of your application
 APPLICATION = controller
 
@@ -8,14 +7,14 @@ NUM_COLUMNS ?= 21
 SURVIVOR_LIST ?= 4,6,11,11
 MINES_LIST ?= 7,7,17,18
 
-ROBOT_PORT ?= 10000
+CONTROLLER_PORT ?= 10000
 MAX_ROBOTS ?= 15
 
 CFLAGS += -DNUM_LINES=$(NUM_LINES)
 CFLAGS += -DNUM_COLUMNS=$(NUM_COLUMNS)
 CFLAGS += -DSURVIVOR_LIST=\"$(SURVIVOR_LIST)\"
 CFLAGS += -DMINES_LIST=\"$(MINES_LIST)\"
-CFLAGS += -DROBOT_PORT=$(ROBOT_PORT)
+CFLAGS += -DCONTROLLER_PORT=$(CONTROLLER_PORT)
 CFLAGS += -DMAX_ROBOTS=$(MAX_ROBOTS)
 
 CFLAGS += -DROBOT_ADDRESSES=\"$(ROBOT_ADDRESSES)\"
@@ -24,7 +23,7 @@ CFLAGS += -DROBOT_ADDRESSES=\"$(ROBOT_ADDRESSES)\"
 BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../..
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present

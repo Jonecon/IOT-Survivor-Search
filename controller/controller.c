@@ -1,5 +1,5 @@
-// make PORT=tap1 all term
-// make PORT=tap2 all term
+
+/* make all PORT=tap3 ROBOT_ADDRESSES=fe80::b4e1:7aff:fe26:3b28 term */
 
 #include <stdio.h>
 #include "net/sock/udp.h"
@@ -28,6 +28,7 @@ int numRobots = 0;
 char robot_addresses[MAX_ROBOTS][24];
 char stack[MAX_ROBOTS][THREAD_STACKSIZE_MAIN];
 char message[MAX_ROBOTS][20];
+uint8_t buf[16];
 
 /* DEFINING SETS OF COMMANDS FOR THE CONTROLLER */
 static const shell_command_t shell_commands[] = {
@@ -46,15 +47,79 @@ static const shell_command_t shell_commands[] = {
 void *controller_thread_handler(void *arg) {
 
 	int id = atoi(arg);
-	printf("\n id: %d", id);
+	printf("\nid: %d\n", id);
 
+	// prepare a local address
+	sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
+	local.port = CONTROLLER_PORT;
+
+	// create a UDP sock bound to that local address
+	sock_udp_t sock;
+	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
+		puts("Error creating UDP sock");
+		return NULL;
+	}
+
+	// prepare  a remote address, of the server
+	sock_udp_ep_t remote = { .family = AF_INET6 };
+
+	// configure the server address, remote, using macros SERVER_ADDR and SERVER_PORT
+	// that are defined in Makefile and can be overridden by command line
+	// first use the string SERVER_ADDR that represents the address of server
+	if (ipv6_addr_from_str((ipv6_addr_t *)&remote.addr.ipv6, robot_addresses[id]) == NULL) {
+		puts("Cannot convert server address");
+		sock_udp_close(&sock);
+		return NULL;
+	}
+	// then the remote port
+	remote.port = CONTROLLER_PORT;
+
+	ssize_t res;
 	while (1) {
 		if (strlen(message[id]) == 0) {
 			xtimer_sleep(1);
 			continue;
-		}
+		} 
+		else 
+		{
+			printf("sending: %s\n", message[id] );
 
-		// printf("sending: %s\n", message[id] );
+			if (sock_udp_send(&sock, message[id], strlen(message[id]), &remote) < 0)
+			{
+				puts("Error sending message");
+				sock_udp_close(&sock);
+				return NULL;
+			}
+
+			// 
+			sock_udp_ep_t remote;
+			buf[0] = 0;
+			res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
+			if (res < 0) {
+				if (res == -ETIMEDOUT) {
+					puts("Timed out, no response. Message may be lost or delayed.");
+				} else {
+					puts("Error receiving message. This should not happen.");
+				}
+			}
+			else {
+				// convert server (i.e. remote) address from ipv6_addr_t to string
+				char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
+				if (ipv6_addr_to_str(ipv6_addr, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
+					printf("\nCannot convert server address\n");
+					strcpy(ipv6_addr, "???");
+				}
+
+				// ensure a null-terminated string
+				buf[res] = 0; 
+				printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+				// take parameter from the message
+			}
+
+			// DELETING COMMAND FROM THE MESSAGE
+			strcpy(message[id], "");
+			// printf("Sending %s instruction to robot\n", arg[0]);
+		}
 	}
 
 	return NULL;
