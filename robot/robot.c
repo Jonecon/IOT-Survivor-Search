@@ -25,6 +25,7 @@ typedef struct {
     int direction;
 		int energy;
 		struct Point position;
+		//Hard coded need to change.
 		struct Point survivors_list[3];
 		struct Point survivors_found[3];
 		struct Point mines_list[MAX_MINES];
@@ -43,6 +44,10 @@ extern int stop_cmd(int argc, char **argv);
 extern int getSta_cmd(int argc, char **argv);
 extern int getSta_cmd_remote(char* response);
 extern int sUp_cmd_remote(char* response);
+extern int sDown_cmd_remote(char* response);
+extern int sRight_cmd_remote(char* response);
+extern int sLeft_cmd_remote(char* response);
+extern int stop_cmd_remote(char* response);
 void *robot_communications_thread_handler(void *arg);
 void *robot_logic_thread_handler(void *arg);
 
@@ -56,6 +61,7 @@ char com_thread_stack[THREAD_STACKSIZE_MAIN];
 char logic_thread_stack[THREAD_STACKSIZE_MAIN];
 struct Point position;
 struct Point border;
+
 
 
 static const shell_command_t shell_commands[] = {
@@ -167,6 +173,36 @@ void *robot_communications_thread_handler(void *arg){
 	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 	        puts("\nError sending reply to client");
 	      }
+			}else if (strcmp((char*) buf, "sDown") == 0){
+				sDown_cmd_remote((char*) buf);
+	      printf("sending back %s\n", (char*) buf);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
+			}else if (strcmp((char*) buf, "sLeft") == 0){
+				sLeft_cmd_remote((char*) buf);
+	      printf("sending back %s\n", (char*) buf);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
+			}else if (strcmp((char*) buf, "sRight") == 0){
+				sRight_cmd_remote((char*) buf);
+	      printf("sending back %s\n", (char*) buf);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
+			}else if (strcmp((char*) buf, "stop") == 0){
+				stop_cmd_remote((char*) buf);
+	      printf("sending back %s\n", (char*) buf);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
+			}else if (strcmp((char*) buf, "getSta") == 0){
+				getSta_cmd_remote((char*) buf);
+	      printf("sending back %s\n", (char*) buf);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
 			}
 	  }
 	  else {
@@ -189,6 +225,10 @@ void *robot_logic_thread_handler(void *arg){
 		//Wait 1 second and then move.
 		xtimer_sleep(1);
 		mutex_lock(&data.lock);
+		if (data.energy <= 0 && data.direction != 0){
+			printf("%s\n", "BATTERY DEAD");
+			while(1){}
+		}
 		switch (data.direction) {
 			case 1:
 				if (data.position.y == 0){
@@ -229,6 +269,25 @@ void *robot_logic_thread_handler(void *arg){
 			case 0:
 				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
+		}
+		//If we are on a survivor ALSO HARD CODED NEEDS TO CHANGE
+		for (int i = 0; i < 3; i++){
+			if (data.position.x == data.survivors_list[i].x && data.position.y == data.survivors_list[i].y){
+				printf("\n%s\n", "FOUND SURVIVOR");
+				data.survivors_found[i].x = position.x;
+				data.survivors_found[i].y = position.y;
+			}
+		}
+
+		//If we landed on a bomb
+		for (int i = 0; i < MAX_MINES; i++){
+			if (data.position.x == data.mines_list[i].x && data.position.y == data.mines_list[i].y){
+				printf("\n%s\n", "DEAD");
+				while (1){}
+			}
+		}
+		if (data.direction != 0){
+			data.energy -= 10;
 		}
 		mutex_unlock(&data.lock);
 	}
