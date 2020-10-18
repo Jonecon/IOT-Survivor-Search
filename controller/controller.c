@@ -31,6 +31,8 @@ char auto_thread_stack[MAX_ROBOTS][THREAD_STACKSIZE_MAIN];
 char message[MAX_ROBOTS][20];
 uint8_t buf[255];
 
+int robotID = 0;
+
 /* DEFINING SETS OF COMMANDS FOR THE CONTROLLER */
 static const shell_command_t shell_commands[] = {
 	{"sUp", "Send move up instruction to a robot", controller_cmd},
@@ -46,10 +48,9 @@ static const shell_command_t shell_commands[] = {
 /* THREAD HANDLER */
 
 void *controller_thread_handler(void *arg) {
+	(void)arg;
 
-	/* TO BE DELETED ? */
-	int id = atoi(arg);
-	printf("\nid: %d\n", id);
+	int id = robotID;
 
 	// CONFIGURING local.port TO WAIT FOR MESSAGES TRANSMITED TOWARDS THE CONTROLLER_PORT
 	// THEN CREATING UDP SOCK BOUND TO THE LOCAL ADDRESS
@@ -73,7 +74,7 @@ void *controller_thread_handler(void *arg) {
 	}
 
 	// SETTING THE PORT OF THE CONTROLLER
-	remote.port = CONTROLLER_PORT;
+	remote.port = CONTROLLER_PORT + id;
 
 	// configure the underlying network such that all packets transmitted will reach a server
 	ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
@@ -86,7 +87,6 @@ void *controller_thread_handler(void *arg) {
 			xtimer_sleep(1);
 			continue;
 		} else {
-
 			/* TO BE DELETED ? */
 			printf("sending: %s to robot id: %d\n", message[id], id);
 
@@ -140,7 +140,7 @@ int main(void) {
 	strcpy(str, ROBOT_ADDRESSES);
 	char* token = strtok(str, ",");
 
-	int robotID = 0;
+	// int robotID = 0;
 
 	// SETTING UP COMMUNICATION THREADS FOR EACH ROBOTS
 	while (token != NULL) {
@@ -148,7 +148,7 @@ int main(void) {
 
 		// CREATING THREAD PASSING ID AS PARAMETER
 		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
-			THREAD_CREATE_STACKTEST, controller_thread_handler, (void *)&robotID, "control thread");
+			THREAD_CREATE_STACKTEST, controller_thread_handler, NULL, "control thread");
 
 		// thread_create(auto_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
 		// 	THREAD_CREATE_STACKTEST, controller_thread_handler, (void *)&robotID, "control thread");
