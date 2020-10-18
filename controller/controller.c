@@ -79,7 +79,6 @@ void *controller_thread_handler(void *arg) {
 	// configure the underlying network such that all packets transmitted will reach a server
 	ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
-	ssize_t res;
 	while (1) {
 
 		// IF THERE IS NO COMMAND
@@ -87,6 +86,7 @@ void *controller_thread_handler(void *arg) {
 			xtimer_sleep(1);
 			continue;
 		} else {
+			ssize_t res;
 			/* TO BE DELETED ? */
 			printf("sending: %s to robot id: %d\n", message[id], id);
 
@@ -99,7 +99,7 @@ void *controller_thread_handler(void *arg) {
 
 			// WAITING FOR A RESPONSE
 			sock_udp_ep_t remote;
-			buf[0] = 0;
+			uint8_t buf[255];
 			res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
 			if (res < 0) {
 				if (res == -ETIMEDOUT) {
@@ -125,6 +125,7 @@ void *controller_thread_handler(void *arg) {
 
 			// DELETING COMMAND FROM THE MESSAGE
 			strcpy(message[id], "");
+			res = 0;
 		}
 	}
 

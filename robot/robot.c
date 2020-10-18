@@ -169,10 +169,10 @@ void *robot_communications_thread_handler(void *arg){
 
 			if (strcmp((char*) buf, "sUp") == 0){
 				sUp_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
+		      printf("sending back %s\n", (char*) buf);
+		      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+		        puts("\nError sending reply to client");
+		      }
 			}else if (strcmp((char*) buf, "sDown") == 0){
 				sDown_cmd_remote((char*) buf);
 	      printf("sending back %s\n", (char*) buf);
@@ -204,6 +204,7 @@ void *robot_communications_thread_handler(void *arg){
 	        puts("\nError sending reply to client");
 	      }
 			}
+			res = -1;
 	  }
 	  else {
 	      if (res == -ETIMEDOUT) {
@@ -215,7 +216,7 @@ void *robot_communications_thread_handler(void *arg){
 	        puts("\nError receiving message");
 	      }
 	  	}
-		}
+	}
 	return NULL;
 }
 
