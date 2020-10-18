@@ -281,7 +281,7 @@ void *robot_logic_thread_handler(void *arg){
 
 		//If we landed on a bomb
 		for (int i = 0; i < MAX_MINES; i++){
-			if (data.mines_list[i].x == 0 && data.mines_list[i] == 0){
+			if (data.mines_list[i].x == 0 && data.mines_list[i].y == 0){
 				break;
 			}
 			if (data.position.x == data.mines_list[i].x && data.position.y == data.mines_list[i].y){
