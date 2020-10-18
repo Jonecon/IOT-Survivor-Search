@@ -61,7 +61,8 @@ void *controller_thread_handler(void *arg) {
 	}
 
 	// prepare  a remote address, of the server
-	sock_udp_ep_t remote = { .family = AF_INET6 };
+	sock_udp_ep_t remote = {.family = AF_INET6};
+
 
 	// configure the server address, remote, using macros SERVER_ADDR and SERVER_PORT
 	// that are defined in Makefile and can be overridden by command line
@@ -74,13 +75,16 @@ void *controller_thread_handler(void *arg) {
 	// then the remote port
 	remote.port = CONTROLLER_PORT;
 
+	//configure the underlying network such that all packets transmitted will reach a server
+  ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
+
 	ssize_t res;
 	while (1) {
 		if (strlen(message[id]) == 0) {
 			xtimer_sleep(1);
 			continue;
-		} 
-		else 
+		}
+		else
 		{
 			printf("sending: %s\n", message[id] );
 
@@ -91,7 +95,7 @@ void *controller_thread_handler(void *arg) {
 				return NULL;
 			}
 
-			// 
+			//
 			sock_udp_ep_t remote;
 			buf[0] = 0;
 			res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
@@ -111,7 +115,7 @@ void *controller_thread_handler(void *arg) {
 				}
 
 				// ensure a null-terminated string
-				buf[res] = 0; 
+				buf[res] = 0;
 				printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 				// take parameter from the message
 			}
@@ -153,7 +157,7 @@ int main(void) {
 	puts("Shell running");
 	char line_buf[SHELL_DEFAULT_BUFSIZE];
 	shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
-	
+
 	// SHOULD NEVER BE REACHED
 	return 0;
 }
@@ -177,8 +181,6 @@ int sUp_cmd(int argc, char **argv) {
 		printf("No robot with this ID\n");
 		return 1;
 	}
-	
+
 	return 0;
 }
-
-

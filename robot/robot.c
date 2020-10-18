@@ -145,7 +145,7 @@ void *robot_communications_thread_handler(void *arg){
         strcpy(ipv6_addr_str, "???");
       }
       buf[res] = 0; // ensure null-terminated string
-      //printf("Received from (%s, %d): \"%s\"\t", ipv6_addr_str, remote.port, (char*) buf);
+      printf("Received from (%s, %d): \"%s\"\t", ipv6_addr_str, remote.port, (char*) buf);
       //sscanf((char*) buf, "PING %d", &count);
       //count++;
 
