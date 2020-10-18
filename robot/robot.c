@@ -80,6 +80,7 @@ int main(void)
 			id++;
 			token = strtok(NULL, ",");
 		}
+		num_survivors = id;
 
 		//Setting up mines pos variable
 		strcpy(str, MINES_LIST);
@@ -146,20 +147,17 @@ void *robot_communications_thread_handler(void *arg){
       }
       buf[res] = 0; // ensure null-terminated string
       printf("Received from (%s, %d): \"%s\"\t", ipv6_addr_str, remote.port, (char*) buf);
-      //sscanf((char*) buf, "PING %d", &count);
-      //count++;
 
-			/* Need to work on
-			if ((char*) buf == "sUp"){
-				printf("%s\n", (char*) buf);
+			if (strcmp((char*) buf, "sUp") == 0){
+				xtimer_sleep(1);
+				sUp_cmd_remote((char*) buf);
+				xtimer_sleep(1);
+	      printf("sending back %s\n", (char*) buf);
+				xtimer_sleep(1);
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf)+1, &remote) < 0) {
+	        puts("\nError sending reply to client");
+	      }
 			}
-
-      sprintf((char*) buf, "PONG %d", count);
-      printf("sending back %s\n", (char*) buf);
-      if (sock_udp_send(&sock, buf, strlen((char*)buf)+1, &remote) < 0) {
-        puts("\nError sending reply to client");
-      }
-			*/
 	  }
 	  else {
 	      if (res == -ETIMEDOUT) {
@@ -221,6 +219,7 @@ void *robot_logic_thread_handler(void *arg){
 				printf("(%d, %d (%s))", position.x, position.y, "stationary");
 				break;
 		}
+		printf("Direction: %d\n", moving_direction);
 	}
 	return NULL;
 }
@@ -231,7 +230,6 @@ int sUp_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	//printf("Moving UP\n");
 	moving_direction = DIRECTION_UP;
 	return 0;
 }
@@ -243,7 +241,6 @@ int sDown_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	//printf("Moving UP\n");
 	moving_direction = DIRECTION_DOWN;
 	return 0;
 }
@@ -255,7 +252,6 @@ int sLeft_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	//printf("Moving UP\n");
 	moving_direction = DIRECTION_LEFT;
 	return 0;
 }
@@ -266,7 +262,6 @@ int sRight_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	//printf("Moving UP\n");
 	moving_direction = DIRECTION_RIGHT;
 	return 0;
 }
@@ -278,8 +273,7 @@ int stop_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	printf("Moving UP\n");
-	moving_direction = DIRECTION_UP;
+	moving_direction = DIRECTION_STOP;
 	return 0;
 }
 
@@ -294,14 +288,14 @@ int getSta_cmd(int argc, char **argv){
 }
 
 int getSta_cmd_remote(char* response){
-	char str[128];
-	int i;
-	sprintf(str, "STATUS robot ENERGY %d at (%d, %d) and direction %d, survivors: ", energy, position.x, position.y, moving_direction);
-	strcat(response, str);
-	for (i=0; i<num_survivors && survivors_list[i].x != NUM_LINES; i++){
-		sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
-		strcat(response, str);
-	}
+	//char str[128];
+	//int i;
+	sprintf(response, "STATUS asdfsadfsadfasdfsadfsafdsafd");
+	//strcat(response, str);
+	//for (i=0; i<num_survivors && survivors_list[i].x != NUM_LINES; i++){
+	//	sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
+	//	strcat(response, str);
+	//}
 	return 0;
 }
 
