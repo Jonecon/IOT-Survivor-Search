@@ -8,6 +8,7 @@
 #include "msg.h"
 #include "net/gnrc/netreg.h"
 #include "net/gnrc/pktdump.h"
+#include "mutex.h"
 
 #define DIRECTION_UP 1;
 #define DIRECTION_DOWN 2;
@@ -19,6 +20,18 @@ struct Point {
 	int x;
 	int y;
 };
+
+typedef struct {
+    int direction;
+		int energy;
+		struct Point position;
+		struct Point survivors_list[3];
+		struct Point survivors_found[3];
+		struct Point mines_list[MAX_MINES];
+    mutex_t lock;
+} data_t;
+
+static data_t data;
 
 //Declaring functions
 extern int _gnrc_netif_config(int argc, char **argv);
@@ -36,15 +49,12 @@ void *robot_logic_thread_handler(void *arg);
 //Declaring variables
 //sem_t mutex;
 uint8_t buf[16];
-int moving_direction;
-int energy;
+//int data.direction;
+//int data.energy;
 int num_survivors;
 char com_thread_stack[THREAD_STACKSIZE_MAIN];
 char logic_thread_stack[THREAD_STACKSIZE_MAIN];
 struct Point position;
-struct Point survivors_list[3];
-struct Point survivors_found[3];
-struct Point mines_list[MAX_MINES];
 struct Point border;
 
 
@@ -63,9 +73,10 @@ static const shell_command_t shell_commands[] = {
 int main(void)
 {
 		//Setup variables to map
-		energy = ENERGY;
-		position.x = 10;
-		position.y = 10;
+		data.energy = ENERGY;
+		printf("%d\n", data.energy);
+		data.position.x = 10;
+		data.position.y = 10;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
 		//sem_init(&mutex, 0, 1);
@@ -76,9 +87,9 @@ int main(void)
 		char* token = strtok(str, ",");
 		int id = 0;
 		while (token != NULL){
-			survivors_list[id].x = atoi(token);
+			data.survivors_list[id].x = atoi(token);
 			token = strtok(NULL, ",");
-			survivors_list[id].y = atoi(token);
+			data.survivors_list[id].y = atoi(token);
 			id++;
 			token = strtok(NULL, ",");
 		}
@@ -89,9 +100,9 @@ int main(void)
 		token = strtok(str, ",");
 		id = 0;
 		while (token != NULL){
-			mines_list[id].x = atoi(token);
+			data.mines_list[id].x = atoi(token);
 			token = strtok(NULL, ",");
-			mines_list[id].y = atoi(token);
+			data.mines_list[id].y = atoi(token);
 			id++;
 			token = strtok(NULL, ",");
 		}
@@ -153,7 +164,7 @@ void *robot_communications_thread_handler(void *arg){
 			if (strcmp((char*) buf, "sUp") == 0){
 				sUp_cmd_remote((char*) buf);
 	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf)+1, &remote) < 0) {
+	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 	        puts("\nError sending reply to client");
 	      }
 			}
@@ -162,7 +173,7 @@ void *robot_communications_thread_handler(void *arg){
 	      if (res == -ETIMEDOUT) {
           // this is the case when the receive "failed" because there was no message to be received
           // within the time interval given
-          puts("timeout, no incoming PING available, just wait");
+          //puts("timeout, no incoming PING available, just wait");
 	      }
 	      else {
 	        puts("\nError receiving message");
@@ -177,50 +188,49 @@ void *robot_logic_thread_handler(void *arg){
 	while(1){
 		//Wait 1 second and then move.
 		xtimer_sleep(1);
-		//sem_wait(&mutex);
-		switch (moving_direction) {
+		mutex_lock(&data.lock);
+		switch (data.direction) {
 			case 1:
-				if (position.y == 0){
-					moving_direction = DIRECTION_STOP;
+				if (data.position.y == 0){
+					data.direction = DIRECTION_STOP;
 					break;
 				}
-				position.y -= 1;
-				printf("(%d, %d)", position.x, position.y);
+				data.position.y -= 1;
+				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 
 			case 2:
-				if (position.y == border.y){
-					moving_direction = DIRECTION_STOP;
+				if (data.position.y == border.y){
+					data.direction = DIRECTION_STOP;
 					break;
 				}
-				position.y += 1;
-				printf("(%d, %d)", position.x, position.y);
+				data.position.y += 1;
+				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 
 			case 3:
-				if (position.x == 0){
-					moving_direction = DIRECTION_STOP;
+				if (data.position.x == 0){
+					data.direction = DIRECTION_STOP;
 					break;
 				}
-				position.x -= 1;
-				printf("(%d, %d)", position.x, position.y);
+				data.position.x -= 1;
+				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 
 			case 4:
-				if (position.x == border.x){
-					moving_direction = DIRECTION_STOP;
+				if (data.position.x == border.x){
+					data.direction = DIRECTION_STOP;
 					break;
 				}
-				position.x += 1;
-				printf("(%d, %d)", position.x, position.y);
+				data.position.x += 1;
+				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 
 			case 0:
-				printf("(%d, %d (%s))", position.x, position.y, "stationary");
+				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 		}
-		//sem_post(&mutex);
-		printf("Direction: %d\n", moving_direction);
+		mutex_unlock(&data.lock);
 	}
 	return NULL;
 }
@@ -231,7 +241,7 @@ int sUp_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	moving_direction = DIRECTION_UP;
+	data.direction = DIRECTION_UP;
 	return 0;
 }
 
@@ -242,7 +252,7 @@ int sDown_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	moving_direction = DIRECTION_DOWN;
+	data.direction = DIRECTION_DOWN;
 	return 0;
 }
 
@@ -253,7 +263,7 @@ int sLeft_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	moving_direction = DIRECTION_LEFT;
+	data.direction = DIRECTION_LEFT;
 	return 0;
 }
 
@@ -263,7 +273,7 @@ int sRight_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	moving_direction = DIRECTION_RIGHT;
+	data.direction = DIRECTION_RIGHT;
 	return 0;
 }
 
@@ -274,7 +284,7 @@ int stop_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	moving_direction = DIRECTION_STOP;
+	data.direction = DIRECTION_STOP;
 	return 0;
 }
 
@@ -284,50 +294,46 @@ int getSta_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	printf("Energy: %d, Position: (%d, %d)\n", energy, position.x, position.y);
+	printf("energy: %d, Position: (%d, %d)\n", data.energy, data.position.x, data.position.y);
 	return 0;
 }
 
 int getSta_cmd_remote(char* response){
-	//sem_wait(&mutex);
+	mutex_lock(&data.lock);
 	//char str[128];
 	//int i;
-	sprintf(response, "STATUS asdfsadfsadfasdfsadfsafdsafd");
-	//strcat(response, str);
-	//for (i=0; i<num_survivors && survivors_list[i].x != NUM_LINES; i++){
-	//	sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
-	//	strcat(response, str);
-	//}
-	//sem_post(&mutex);
+	sprintf(response, "STATUS energy: %d position: (%d, %d) direction: %d", data.energy, data.position.x, data.position.y, data.direction);
+
+	mutex_unlock(&data.lock);
 	return 0;
 }
 
 int sUp_cmd_remote(char* response){
-	moving_direction = DIRECTION_UP;
+	data.direction = DIRECTION_UP;
 	getSta_cmd_remote(response);
 	return 0;
 }
 
 int sDown_cmd_remote(char* response){
-	moving_direction = DIRECTION_DOWN;
+	data.direction = DIRECTION_DOWN;
 	getSta_cmd_remote(response);
 	return 0;
 }
 
 int sLeft_cmd_remote(char* response){
-	moving_direction = DIRECTION_LEFT;
+	data.direction = DIRECTION_LEFT;
 	getSta_cmd_remote(response);
 	return 0;
 }
 
 int sRight_cmd_remote(char* response){
-	moving_direction = DIRECTION_RIGHT;
+	data.direction = DIRECTION_RIGHT;
 	getSta_cmd_remote(response);
 	return 0;
 }
 
 int stop_cmd_remote(char* response){
-	moving_direction = DIRECTION_STOP;
+	data.direction = DIRECTION_STOP;
 	getSta_cmd_remote(response);
 	return 0;
 }
