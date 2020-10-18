@@ -1,4 +1,4 @@
-
+/* CLIENT = CONTROLLER */
 /* make all PORT=tap3 ROBOT_ADDRESSES=fe80::b4e1:7aff:fe26:3b28 term */
 
 #include <stdio.h>
@@ -49,24 +49,21 @@ void *controller_thread_handler(void *arg) {
 	int id = atoi(arg);
 	printf("\nid: %d\n", id);
 
-	// prepare a local address
+	// CONFIGURING local.port TO WAIT FOR MESSAGES TRANSMITED TOWARDS THE CONTROLLER_PORT
+	// THEN CREATING UDP SOCK BOUND TO THE LOCAL ADDRESS
 	sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
-	local.port = CONTROLLER_PORT;
-
-	// create a UDP sock bound to that local address
 	sock_udp_t sock;
+
+	local.port = CONTROLLER_PORT;
+	
+	// IF THERE'S AN ERROR CREATING UDP SOCK
 	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
 		puts("Error creating UDP sock");
 		return NULL;
 	}
 
-	// prepare  a remote address, of the server
+	// PREPARE A REMOTE ADDRESS WHICH CORRESPOND TO THE ROBOT
 	sock_udp_ep_t remote = {.family = AF_INET6};
-
-
-	// configure the server address, remote, using macros SERVER_ADDR and SERVER_PORT
-	// that are defined in Makefile and can be overridden by command line
-	// first use the string SERVER_ADDR that represents the address of server
 	if (ipv6_addr_from_str((ipv6_addr_t *)&remote.addr.ipv6, robot_addresses[id]) == NULL) {
 		puts("Cannot convert server address");
 		sock_udp_close(&sock);
@@ -76,7 +73,7 @@ void *controller_thread_handler(void *arg) {
 	remote.port = CONTROLLER_PORT;
 
 	//configure the underlying network such that all packets transmitted will reach a server
-  ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
+	ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
 	ssize_t res;
 	while (1) {
@@ -95,7 +92,7 @@ void *controller_thread_handler(void *arg) {
 				return NULL;
 			}
 
-			//
+			// wait for msg
 			sock_udp_ep_t remote;
 			buf[0] = 0;
 			res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
