@@ -34,6 +34,7 @@ void *robot_communications_thread_handler(void *arg);
 void *robot_logic_thread_handler(void *arg);
 
 //Declaring variables
+//sem_t mutex;
 uint8_t buf[16];
 int moving_direction;
 int energy;
@@ -67,6 +68,7 @@ int main(void)
 		position.y = 10;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
+		//sem_init(&mutex, 0, 1);
 
 		//Setting up survivors pos variable.
 		char str[NUM_LINES * NUM_COLUMNS];
@@ -95,7 +97,7 @@ int main(void)
 		}
 
 		//Setup communication thread
-		thread_create(com_thread_stack, sizeof(com_thread_stack), THREAD_PRIORITY_MAIN - 1,
+		thread_create(com_thread_stack, sizeof(com_thread_stack), THREAD_PRIORITY_MAIN - 3,
 			THREAD_CREATE_STACKTEST, robot_communications_thread_handler,
 			NULL, "communication thread");
 
@@ -149,11 +151,8 @@ void *robot_communications_thread_handler(void *arg){
       printf("Received from (%s, %d): \"%s\"\t", ipv6_addr_str, remote.port, (char*) buf);
 
 			if (strcmp((char*) buf, "sUp") == 0){
-				xtimer_sleep(1);
 				sUp_cmd_remote((char*) buf);
-				xtimer_sleep(1);
 	      printf("sending back %s\n", (char*) buf);
-				xtimer_sleep(1);
 	      if (sock_udp_send(&sock, buf, strlen((char*)buf)+1, &remote) < 0) {
 	        puts("\nError sending reply to client");
 	      }
@@ -178,6 +177,7 @@ void *robot_logic_thread_handler(void *arg){
 	while(1){
 		//Wait 1 second and then move.
 		xtimer_sleep(1);
+		//sem_wait(&mutex);
 		switch (moving_direction) {
 			case 1:
 				if (position.y == 0){
@@ -219,6 +219,7 @@ void *robot_logic_thread_handler(void *arg){
 				printf("(%d, %d (%s))", position.x, position.y, "stationary");
 				break;
 		}
+		//sem_post(&mutex);
 		printf("Direction: %d\n", moving_direction);
 	}
 	return NULL;
@@ -288,6 +289,7 @@ int getSta_cmd(int argc, char **argv){
 }
 
 int getSta_cmd_remote(char* response){
+	//sem_wait(&mutex);
 	//char str[128];
 	//int i;
 	sprintf(response, "STATUS asdfsadfsadfasdfsadfsafdsafd");
@@ -296,6 +298,7 @@ int getSta_cmd_remote(char* response){
 	//	sprintf(str, "(%d, %d)", survivors_found[i].x, survivors_found[i].y);
 	//	strcat(response, str);
 	//}
+	//sem_post(&mutex);
 	return 0;
 }
 
