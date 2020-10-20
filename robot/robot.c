@@ -1,4 +1,4 @@
-// make all term PORT=tap0
+/* make all PORT=tap10 ROBOT_ID=1 ROBOT_PORT=10001 term */
 
 #include <stdio.h>
 #include "net/sock/udp.h"
@@ -29,7 +29,7 @@ typedef struct {
 		struct Point survivors_list[3];
 		struct Point survivors_found[3];
 		struct Point mines_list[MAX_MINES];
-    mutex_t lock;
+		mutex_t lock;
 } data_t;
 
 static data_t data;
@@ -134,88 +134,105 @@ void *robot_communications_thread_handler(void *arg){
 
 	//Wait for a message to be recieved and then send a response
 	// print network addresses. this is useful to confirm the right addresses are being used
-  puts("Configured network interfaces:");
-  _gnrc_netif_config(0, NULL);
+	puts("Configured network interfaces:");
+	_gnrc_netif_config(0, NULL);
 
-  // configure a local IPv6 address and set port to be used by this server
-  sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
-  local.port = ROBOT_PORT;
-  // create and bind sock to local address
-  sock_udp_t sock;
-  if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
-    puts("Error creating UDP sock");
-    return NULL;
-  }
-  // the server is good to go
-  printf("server waiting on port %d\n", local.port);
+	// configure a local IPv6 address and set port to be used by this server
+	sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
+	local.port = ROBOT_PORT;
+	// create and bind sock to local address
+	sock_udp_t sock;
 
-  ssize_t res;
-  while (1) {
-    // configure a remote address, which will be filled in by recv from the arriving message
-    sock_udp_ep_t remote;
+	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
+		puts("Error creating UDP sock");
+		return NULL;
+	}
 
-    // wait for a message from the client, no more than 3s
-    // to wait forever, use SOCK_NO_TIMEOUT
-    res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
-    if (res >= 0) {
-    	// convert IPv6 address from client to string to display on console
-      char ipv6_addr_str[IPV6_ADDR_MAX_STR_LEN];
-      if (ipv6_addr_to_str(ipv6_addr_str, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
-        /* Cannot convert client address */
-        strcpy(ipv6_addr_str, "???");
-      }
-      buf[res] = 0; // ensure null-terminated string
-      printf("Received from (%s, %d): \"%s\"\t", ipv6_addr_str, remote.port, (char*) buf);
+	// the server is good to go
+	printf("server waiting on port %d\n", local.port);
 
-			if (strcmp((char*) buf, "sUp") == 0){
-				sUp_cmd_remote((char*) buf);
-		      printf("sending back %s\n", (char*) buf);
-		      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-		        puts("\nError sending reply to client");
-		      }
-			}else if (strcmp((char*) buf, "sDown") == 0){
-				sDown_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
-			}else if (strcmp((char*) buf, "sLeft") == 0){
-				sLeft_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
-			}else if (strcmp((char*) buf, "sRight") == 0){
-				sRight_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
-			}else if (strcmp((char*) buf, "stop") == 0){
-				stop_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
-			}else if (strcmp((char*) buf, "getSta") == 0){
-				getSta_cmd_remote((char*) buf);
-	      printf("sending back %s\n", (char*) buf);
-	      if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
-	        puts("\nError sending reply to client");
-	      }
+	ssize_t res;
+	while (1) {
+		// configure a remote address, which will be filled in by recv from the arriving message
+		sock_udp_ep_t remote;
+
+		// wait for a message from the client, no more than 3s
+		// to wait forever, use SOCK_NO_TIMEOUT
+		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
+		if (res >= 0) {
+			// convert IPv6 address from client to string to display on console
+			char ipv6_addr_str[IPV6_ADDR_MAX_STR_LEN];
+
+			if (ipv6_addr_to_str(ipv6_addr_str, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
+				/* Cannot convert client address */
+				strcpy(ipv6_addr_str, "???");
 			}
+
+			buf[res] = 0; // ensure null-terminated string
+			printf("\nReceived from (%s, %d): \"%s\"\t\n", ipv6_addr_str, remote.port, (char*) buf);
+
+			if (strcmp((char*) buf, "sUp") == 0) {
+
+				sUp_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+
+			} else if (strcmp((char*) buf, "sDown") == 0) {
+
+				sDown_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+
+			} else if (strcmp((char*) buf, "sLeft") == 0) {
+
+				sLeft_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+
+			} else if (strcmp((char*) buf, "sRight") == 0) {
+
+				sRight_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+
+			} else if (strcmp((char*) buf, "stop") == 0) {
+
+				stop_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+
+			} else if (strcmp((char*) buf, "getSta") == 0) {
+
+				getSta_cmd_remote((char*) buf);
+				printf("Sending back %s\n", (char*) buf);
+				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
+					puts("\nError sending reply to client");
+				}
+			}
+
 			res = -1;
-	  }
-	  else {
-	      if (res == -ETIMEDOUT) {
-          // this is the case when the receive "failed" because there was no message to be received
-          // within the time interval given
-          //puts("timeout, no incoming PING available, just wait");
-	      }
-	      else {
-	        puts("\nError receiving message");
-	      }
-	  	}
+		}
+		else {
+
+			if (res == -ETIMEDOUT) {
+				// this is the case when the receive "failed" because there was no message to be received
+				// within the time interval given
+				//puts("timeout, no incoming PING available, just wait");
+			}
+			else {
+				puts("\nError receiving message");
+			}
+		}
 	}
 	return NULL;
 }
