@@ -58,12 +58,12 @@ void *controller_thread_handler(void *arg) {
 	sock_udp_t sock;
 
 	local.port = CONTROLLER_PORT;
-	
-	// IF THERE'S AN ERROR CREATING UDP SOCK
+
+	/* IF THERE'S AN ERROR CREATING UDP SOCK
 	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
 		puts("Error creating UDP sock");
 		return NULL;
-	}
+	}*/
 
 	// PREPARE A REMOTE ADDRESS WHICH CORRESPOND TO THE ROBOT
 	sock_udp_ep_t remote = {.family = AF_INET6};
@@ -80,15 +80,21 @@ void *controller_thread_handler(void *arg) {
 	ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
 	while (1) {
-
 		// IF THERE IS NO COMMAND
 		if (strlen(message[id]) == 0) {
 			xtimer_sleep(1);
 			continue;
 		} else {
+			// IF THERE'S AN ERROR CREATING UDP SOCK
+			if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
+				puts("Error creating UDP sock");
+				return NULL;
+			}
 			ssize_t res;
 			/* TO BE DELETED ? */
-			printf("sending: %s to robot id: %d\n", message[id], id);
+			char ipv6_addr_send[IPV6_ADDR_MAX_STR_LEN];
+			ipv6_addr_to_str(ipv6_addr_send, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN);
+			printf("sending: %s to robot id: %d with address of: %s and port of: %d\n", message[id], id, ipv6_addr_send, remote.port);
 
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
 			if (sock_udp_send(&sock, message[id], strlen(message[id]) + 1, &remote) < 0) {
@@ -126,7 +132,16 @@ void *controller_thread_handler(void *arg) {
 			// DELETING COMMAND FROM THE MESSAGE
 			strcpy(message[id], "");
 			res = 0;
+			sock_udp_close(&sock);
 		}
+		//Check to see if we have recieved a spontaneous message.
+		/* if the port is the same as this threads robot
+					Then we have a message to proccess and display
+					if this message
+						THEN
+					etc
+
+		*/
 	}
 
 	return NULL;
@@ -146,9 +161,10 @@ int main(void) {
 	// SETTING UP COMMUNICATION THREADS FOR EACH ROBOTS
 	while (token != NULL) {
 		strcpy(robot_addresses[robotID], token);
+		//printf("This is the token: %s\n", token);
 
 		// CREATING THREAD PASSING ID AS PARAMETER
-		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
+		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1 - robotID,
 			THREAD_CREATE_STACKTEST, controller_thread_handler, NULL, "control thread");
 
 		// thread_create(auto_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
@@ -158,6 +174,10 @@ int main(void) {
 		robotID++;
 		token = strtok(NULL, ",");
 	}
+	/*
+	for(unsigned int i = 0; i < (sizeof(robot_addresses)/sizeof(robot_addresses[0])); i++){
+		printf("robot %d address: %s\n", i, robot_addresses[i]);
+	}*/
 
 	// STARTING SHELL
 	puts("Shell running");
