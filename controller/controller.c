@@ -210,7 +210,7 @@ void *listener_thread_handler(void* arg){
 			// ensure a null-terminated string
 			buf[res] = 0;
 			// printf("Received from robot (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
-			printf("\nReceived from robot (%d): \"%s\"\n", remote.port, buf);
+			printf("\nReceived from robot (%d): \"%s\"", remote.port, buf);
 
 			int id, energy, x, y, status;
 
@@ -241,7 +241,7 @@ void *logic_thread_handler(void *arg) {
 		sprintf(message[i], "pos %d %d", position.x, position.y);
 
 		/* TO BE DELETED ? */
-		printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
+		printf("\nRobot %d position (%d, %d)",i, position.x, position.y);
 	}
 
 	while(1) {
@@ -255,37 +255,37 @@ void *logic_thread_handler(void *arg) {
 				strcpy(message[i], "sRight");
 
 				/* TO BE DELETED ? */
-				printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
+				printf("\nRobot %d position (%d, %d)",i, position.x, position.y);
 
 				
 				xtimer_sleep((border.y/numRobots) + 1);
 			}
 			
-		// 	if (robots[i].status == 0) {
+			if (robots[i].status == 0) {
 
-		// 		// CHECK IF ITS STOP BECAUSE IT REACHED Y BORDER 
-		// 		if ((robots[i].position.y == 0) || (robots[i].position.y == NUM_LINES)) {
+				// CHECK IF ITS STOP BECAUSE IT REACHED Y BORDER 
+				if ((robots[i].position.y == 0) || (robots[i].position.y == NUM_LINES)) {
 					
-		// 			//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		// 			sprintf(message[i], "pos %d %d", position.x, (position.y + 1));
+					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+					sprintf(message[i], "pos %d %d", position.x, (position.y + 1));
 
-		// 			if (robots[i].status == 5)
-		// 			{
-		// 				// IF IT REACHED MAX LEFT
-		// 				if (robots[i].position.y == 0) {
+					if (robots[i].status == 5)
+					{
+						// IF IT REACHED MAX LEFT
+						if (robots[i].position.y == 0) {
 
-		// 					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		// 					strcpy(message[i], "sRight");
-		// 				}
-		// 				// IF IT REACHED MAX RIGHT
-		// 				if (robots[i].position.y == NUM_LINES) {
+							//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+							strcpy(message[i], "sRight");
+						}
+						// IF IT REACHED MAX RIGHT
+						if (robots[i].position.y == NUM_LINES) {
 
-		// 					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		// 					strcpy(message[i], "sLeft");
-		// 				}
-		// 			}
-		// 		}
-		// 	}
+							//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+							strcpy(message[i], "sLeft");
+						}
+					}
+				}
+			}
 		}
 
 		xtimer_sleep(1);
@@ -334,20 +334,20 @@ int main(void) {
 
 /* DECLARING FUNCTIONS */
 int controller_cmd(int argc, char **argv) {
-	if (argc == 4){
-		int robotid = atoi(argv[1]);
-		if (robotid <= MAX_ROBOTS - 1) {
-		//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		sprintf(message[robotid], "%s %s %s", argv[0], argv[2], argv[3]);
-		return 0;
-		}
-	}
 	
-
 	//IF USER DID NOT PUT ROBOT ID
 	if ((argc != 2) && (argc != 4)) {
 		printf("usage: %s robot_id\n", argv[0]);
 		return 1;
+	}
+
+	if (argc == 4){
+		int robotid = atoi(argv[1]);
+		if (robotid <= MAX_ROBOTS - 1) {
+			//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+			sprintf(message[robotid], "%s %s %s", argv[0], argv[2], argv[3]);
+			return 0;
+		}
 	}
 
 	int robotid = atoi(argv[1]);
