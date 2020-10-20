@@ -28,6 +28,7 @@ int numRobots = 0;
 char robot_addresses[MAX_ROBOTS][24];
 char control_thread_stack[MAX_ROBOTS][THREAD_STACKSIZE_MAIN];
 char auto_thread_stack[MAX_ROBOTS][THREAD_STACKSIZE_MAIN];
+char listener_thread_stack[THREAD_STACKSIZE_MAIN];
 char message[MAX_ROBOTS][20];
 uint8_t buf[255];
 
@@ -91,10 +92,7 @@ void *controller_thread_handler(void *arg) {
 				return NULL;
 			}
 			ssize_t res;
-			/* TO BE DELETED ? */
-			char ipv6_addr_send[IPV6_ADDR_MAX_STR_LEN];
-			ipv6_addr_to_str(ipv6_addr_send, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN);
-			printf("sending: %s to robot id: %d with address of: %s and port of: %d\n", message[id], id, ipv6_addr_send, remote.port);
+			printf("sending: %s to robot id: %d\n", message[id], id);
 
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
 			if (sock_udp_send(&sock, message[id], strlen(message[id]) + 1, &remote) < 0) {
@@ -125,26 +123,67 @@ void *controller_thread_handler(void *arg) {
 				// ensure a null-terminated string
 				buf[res] = 0;
 
-				/* TO BE DELETED ? */
-				printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
-			}
+				/* Decide what to do with this information;
+					-maybe update info on robot for the logic thread
+					-Don't need to reply in this thread now
+				*/
 
-			// DELETING COMMAND FROM THE MESSAGE
-			strcpy(message[id], "");
-			res = 0;
+
+				//printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+				strcpy(message[id], "");
+			}
 			sock_udp_close(&sock);
 		}
-		//Check to see if we have recieved a spontaneous message.
-		/* if the port is the same as this threads robot
-					Then we have a message to proccess and display
-					if this message
-						THEN
-					etc
-
-		*/
 	}
 
 	return NULL;
+}
+
+void *listener_thread_handler(void* arg){
+	//Here so we can display all messages recieved and are able to recieve spontaneous messages.
+	/* if the port is the same as this threads robot
+				Then we have a message to proccess and display
+				if this message
+					THEN
+				etc
+
+	*/
+	(void) arg;
+	sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
+	sock_udp_t sock;
+
+	local.port = CONTROLLER_PORT;
+
+	// IF THERE'S AN ERROR CREATING UDP SOCK
+	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
+		puts("Error creating UDP sock");
+		return NULL;
+	}
+
+	while (1){
+		ssize_t res;
+		sock_udp_ep_t remote;
+		uint8_t buf[255];
+		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
+		if (res < 0) {
+			if (res == -ETIMEDOUT) {
+			} else {
+				puts("Error receiving message. This should not happen.");
+			}
+		}
+		else {
+			// CONVERT ROBOT ADDRESS FROM ipv6_addr_t TO STRING
+			char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
+			if (ipv6_addr_to_str(ipv6_addr, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
+				printf("\nCannot convert server address\n");
+				strcpy(ipv6_addr, "???");
+			}
+
+			// ensure a null-terminated string
+			buf[res] = 0;
+			printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+		}
+	}
 }
 
 int main(void) {
@@ -164,7 +203,7 @@ int main(void) {
 		//printf("This is the token: %s\n", token);
 
 		// CREATING THREAD PASSING ID AS PARAMETER
-		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1 - robotID,
+		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
 			THREAD_CREATE_STACKTEST, controller_thread_handler, NULL, "control thread");
 
 		// thread_create(auto_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
@@ -174,6 +213,9 @@ int main(void) {
 		robotID++;
 		token = strtok(NULL, ",");
 	}
+
+	thread_create(listener_thread_stack, sizeof(listener_thread_stack), THREAD_PRIORITY_MAIN - 1,
+		THREAD_CREATE_STACKTEST, listener_thread_handler, NULL, "Listener Thread");
 	/*
 	for(unsigned int i = 0; i < (sizeof(robot_addresses)/sizeof(robot_addresses[0])); i++){
 		printf("robot %d address: %s\n", i, robot_addresses[i]);
