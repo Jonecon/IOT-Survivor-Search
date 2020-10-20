@@ -434,8 +434,8 @@ int setPosition_cmd(int argc, char **argv){
 
 int getSta_cmd_remote(char* response){
 	mutex_lock(&data.lock);
-	sprintf(response, "STATUS energy: %d position: (%d, %d) direction: %d",
-		data.energy, data.position.x, data.position.y, data.direction);
+	sprintf(response, "STATUS id: %d energy: %d position: (%d, %d) direction: %d",
+		ROBOT_ID, data.energy, data.position.x, data.position.y, data.direction);
 	mutex_unlock(&data.lock);
 	return 0;
 }

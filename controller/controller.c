@@ -16,6 +16,7 @@
 #define DIRECTION_DOWN 2;
 #define DIRECTION_LEFT 3;
 #define DIRECTION_RIGHT 4;
+#define DIRECTION_POS 5;
 #define DIRECTION_STOP 0;
 
 // DECLARING FUNCTIONS
@@ -116,7 +117,7 @@ void *controller_thread_handler(void *arg) {
 				return NULL;
 			}
 			
-			printf("\nSending: %s to robot id: %d\n", message[id], id);
+			printf("\nSending: %s to robot id: %d", message[id], id);
 
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
 			if (sock_udp_send(&sock, message[id], strlen(message[id]) + 1, &remote) < 0) {
@@ -152,6 +153,7 @@ void *controller_thread_handler(void *arg) {
 					-maybe update info on robot for the logic thread
 					-Don't need to reply in this thread now
 				*/
+
 
 				//printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 				strcpy(message[id], "");
@@ -207,7 +209,17 @@ void *listener_thread_handler(void* arg){
 
 			// ensure a null-terminated string
 			buf[res] = 0;
-			printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+			// printf("Received from robot (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+			printf("\nReceived from robot (%d): \"%s\"\n", remote.port, buf);
+
+			int id, energy, x, y, status;
+
+			sscanf((char*) buf, "STATUS id: %d energy: %d position: (%d, %d) direction: %d", &id, &energy, &x, &y, &status);
+
+			robots[id].status = status;
+			robots[id].energy = energy;
+			robots[id].position.x = x;
+			robots[id].position.y = y;
 		}
 	}
 }
@@ -222,35 +234,59 @@ void *logic_thread_handler(void *arg) {
 	// MOVING THE ROBOT TO ITS INITIAL POSITION
 	position.x = 0;
 	for (int i = 0; i < numRobots; ++i) {
+
 		position.y = ((border.y/numRobots)*i);
+
 		//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		//sprintf(message[i], "pos %d %d", position.x, position.y);
-		// robots[i].energy = ENERGY;
-		robots[i].position.x = position.x;
-		robots[i].position.y = position.y;
-		robots[i].status = DIRECTION_RIGHT;
+		sprintf(message[i], "pos %d %d", position.x, position.y);
 
 		/* TO BE DELETED ? */
 		printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
 	}
 
-	for (unsigned int i = 0; i < sizeof(robots)/sizeof(robots[0]); ++i)
-	{
-		printf("Robot %d position (%d, %d) with status of %d\n",i, robots[i].position.x, robots[i].position.y, robots[i].status);
-		//if ()
-	}
-
 	while(1) {
 
-		// START MOVING RIGHT THEN WAIT FOR A MSG WHEN A ROBOT IS STOP
-		// for (int i = 0; i < numRobots; ++i) {
-		// 	//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		// 	strcpy(message[i], "sRight");
-		// 	robots[i].status = "sRight";
+		for (int i = 0; i < (numRobots + 1); ++i) {
 
-		// 	/* TO BE DELETED ? */
-		// 	printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
-		// }
+			// START MOVING RIGHT THEN WAIT FOR A MSG WHEN A ROBOT IS STOP
+			if (robots[i].status == 5)
+			{
+				//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+				strcpy(message[i], "sRight");
+
+				/* TO BE DELETED ? */
+				printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
+
+				
+				xtimer_sleep((border.y/numRobots) + 1);
+			}
+			
+		// 	if (robots[i].status == 0) {
+
+		// 		// CHECK IF ITS STOP BECAUSE IT REACHED Y BORDER 
+		// 		if ((robots[i].position.y == 0) || (robots[i].position.y == NUM_LINES)) {
+					
+		// 			//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+		// 			sprintf(message[i], "pos %d %d", position.x, (position.y + 1));
+
+		// 			if (robots[i].status == 5)
+		// 			{
+		// 				// IF IT REACHED MAX LEFT
+		// 				if (robots[i].position.y == 0) {
+
+		// 					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+		// 					strcpy(message[i], "sRight");
+		// 				}
+		// 				// IF IT REACHED MAX RIGHT
+		// 				if (robots[i].position.y == NUM_LINES) {
+
+		// 					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+		// 					strcpy(message[i], "sLeft");
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		}
 
 		xtimer_sleep(1);
 	}
@@ -262,8 +298,6 @@ int main(void) {
 	char str[24*MAX_ROBOTS];
 	strcpy(str, ROBOT_ADDRESSES);
 	char* token = strtok(str, ",");
-
-	// int robotID = 0;
 
 	// SETTING UP COMMUNICATION THREADS FOR EACH ROBOTS
 	while (token != NULL) {
