@@ -32,9 +32,10 @@ struct Point {
 typedef struct {
     int status;
 	int energy;
+	int survFoundCount;
 	struct Point position;
 	//Hard coded need to change.
-	struct Point survivors_found[3];
+	struct Point survFoundList[3];
 	mutex_t lock;
 } robot_data;
 
@@ -133,7 +134,7 @@ void *controller_thread_handler(void *arg) {
 
 			if (res < 0) {
 				if (res == -ETIMEDOUT) {
-					puts("Timed out, no response. Message may be lost or delayed.");
+					puts("\nTimed out, no response. Message may be lost or delayed.");
 				} else {
 					puts("Error receiving message. This should not happen.");
 				}
@@ -212,14 +213,22 @@ void *listener_thread_handler(void* arg){
 			// printf("Received from robot (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 			printf("\nReceived from robot (%d): \"%s\"", remote.port, buf);
 
-			int id, energy, x, y, status;
+			int id, energy, x, y, status, sx, sy;
 
-			sscanf((char*) buf, "STATUS id: %d energy: %d position: (%d, %d) direction: %d", &id, &energy, &x, &y, &status);
-
-			robots[id].status = status;
-			robots[id].energy = energy;
-			robots[id].position.x = x;
-			robots[id].position.y = y;
+			if ((sscanf((char*) buf, "%d e %d p %d %d d %d", &id, &energy, &x, &y, &status)) != 1) {
+				robots[id].status = status;
+				robots[id].energy = energy;
+				robots[id].position.x = x;
+				robots[id].position.y = y;
+			} else if ((sscanf((char*) buf, "%d d %d p %d %d", &id, &status, &x, &y)) != 1) {
+				robots[id].status = status;
+				robots[id].position.x = x;
+				robots[id].position.y = y;
+			} else if ((sscanf((char*) buf, "%d f %d %d d %d", &id, &sx, &sy, &status)) != 1) {
+				robots[id].status = status;
+				robots[id].survFoundList[robots[id].survFoundCount].x = sx;
+				robots[id].survFoundList[robots[id].survFoundCount].y = sy;
+			}
 		}
 	}
 }
@@ -246,22 +255,19 @@ void *logic_thread_handler(void *arg) {
 
 	while(1) {
 
-		for (int i = 0; i < (numRobots + 1); ++i) {
+		for (int i = 0; i < numRobots; ++i) {
 
 			// START MOVING RIGHT THEN WAIT FOR A MSG WHEN A ROBOT IS STOP
-			if (robots[i].status == 5)
-			{
+			if (robots[i].status == 5) {
 				//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
 				strcpy(message[i], "sRight");
-
-				/* TO BE DELETED ? */
-				printf("\nRobot %d position (%d, %d)",i, position.x, position.y);
-
-				
 				xtimer_sleep((border.y/numRobots) + 1);
 			}
 			
 			if (robots[i].status == 0) {
+
+				/* TO BE DELETED ? */
+				printf("\nRobot %d went here", i);
 
 				// CHECK IF ITS STOP BECAUSE IT REACHED Y BORDER 
 				if ((robots[i].position.y == 0) || (robots[i].position.y == NUM_LINES)) {
@@ -307,6 +313,10 @@ int main(void) {
 		thread_create(control_thread_stack[robotID], sizeof(control_thread_stack[robotID]), THREAD_PRIORITY_MAIN - 1,
 			THREAD_CREATE_STACKTEST, controller_thread_handler, NULL, "Control Thread");
 
+		robots[robotID].survFoundCount = 0;
+		robots[robotID].status = -1;
+		//robots[robotID].
+
 		numRobots++;
 		robotID++;
 		token = strtok(NULL, ",");
@@ -324,7 +334,7 @@ int main(void) {
 	}*/
 
 	// STARTING SHELL
-	puts("Shell running");
+	puts("\nShell running");
 	char line_buf[SHELL_DEFAULT_BUFSIZE];
 	shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 
