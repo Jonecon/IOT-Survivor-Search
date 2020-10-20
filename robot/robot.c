@@ -15,6 +15,7 @@
 #define DIRECTION_LEFT 3;
 #define DIRECTION_RIGHT 4;
 #define DIRECTION_STOP 0;
+#define DIRECTION_POS 5;
 
 struct Point {
 	int x;
@@ -25,6 +26,7 @@ typedef struct {
     int direction;
 		int energy;
 		struct Point position;
+		struct Point destination;
 		//Hard coded need to change.
 		struct Point survivors_list[3];
 		struct Point survivors_found[3];
@@ -42,12 +44,14 @@ extern int sLeft_cmd(int argc, char **argv);
 extern int sRight_cmd(int argc, char **argv);
 extern int stop_cmd(int argc, char **argv);
 extern int getSta_cmd(int argc, char **argv);
+extern int setPosition_cmd(int argc, char **argv);
 extern int getSta_cmd_remote(char* response);
 extern int sUp_cmd_remote(char* response);
 extern int sDown_cmd_remote(char* response);
 extern int sRight_cmd_remote(char* response);
 extern int sLeft_cmd_remote(char* response);
 extern int stop_cmd_remote(char* response);
+extern int setPosition_cmd_remote(char* response);
 void *robot_communications_thread_handler(void *arg);
 void *robot_logic_thread_handler(void *arg);
 
@@ -59,18 +63,19 @@ uint8_t buf[16];
 int num_survivors;
 char com_thread_stack[THREAD_STACKSIZE_MAIN];
 char logic_thread_stack[THREAD_STACKSIZE_MAIN];
-struct Point position;
+//struct Point position;
 struct Point border;
 
 
 
 static const shell_command_t shell_commands[] = {
 	{"sUp", "Starts the robot moving in the direction UP", sUp_cmd},
-	{"sDown", "", sDown_cmd},
-	{"sLeft", "", sLeft_cmd},
-	{"sRight", "", sRight_cmd},
-	{"stop", "", stop_cmd},
-	{"getSta", "", getSta_cmd},
+	{"sDown", "Starts the robot moving in the direction DOWN", sDown_cmd},
+	{"sLeft", "Starts the robot moving in the direction LEFT", sLeft_cmd},
+	{"sRight", "Starts the robot moving in the direction RIGHT", sRight_cmd},
+	{"stop", "Stops the robot moving", stop_cmd},
+	{"getSta", "Gets the status of the robot", getSta_cmd},
+	{"pos", "Moves the robot to a specific coordinate", setPosition_cmd},
 	{NULL, NULL, NULL}
 };
 
@@ -83,6 +88,8 @@ int main(void)
 		printf("%d\n", data.energy);
 		data.position.x = 0;
 		data.position.y = 0;
+		data.destination.x = 0;
+		data.destination.y = 0;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
 		//sem_init(&mutex, 0, 1);
@@ -171,6 +178,8 @@ void *robot_communications_thread_handler(void *arg){
 			buf[res] = 0; // ensure null-terminated string
 			printf("\nReceived from (%s, %d): \"%s\"\t\n", ipv6_addr_str, remote.port, (char*) buf);
 
+
+			//WILL BE CHANGING TO TO SMALLER MESSAGE SIZE INDICATORS
 			if (strcmp((char*) buf, "sUp") == 0) {
 
 				sUp_cmd_remote((char*) buf);
@@ -218,8 +227,16 @@ void *robot_communications_thread_handler(void *arg){
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 					puts("\nError sending reply to client");
 				}
+			} else {
+			 	int x, y;
+				if ((sscanf((char*) buf, "pos %d %d", &x, &y)) != -1){
+					setPosition_cmd_remote((char*) buf);
+					printf("Sending back %s\n", buf);
+					if (sock_udp_send(&sock, buf, strlen((char*) buf), &remote) < 0){
+						puts("\nError sending reply to client");
+					}
+				}
 			}
-
 			res = -1;
 		}
 		else {
@@ -287,13 +304,39 @@ void *robot_logic_thread_handler(void *arg){
 			case 0:
 				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
+
+			case 5:
+				if (data.destination.x < 0 || data.destination.x > border.x || data.destination.y > border.y || data.destination.y < 0){
+					printf("The coords (%d, %d) are out of bounds\n", data.destination.x, data.destination.y);
+					data.direction = DIRECTION_STOP;
+					//Reply to the server these are out of bounds.
+					break;
+				}
+				if (data.position.x != data.destination.x){
+					if (data.position.x > data.destination.x){
+						data.position.x -= 1;
+					}else{
+						data.position.x += 1;
+					}
+				}else if (data.position.y != data.destination.y){
+					if (data.position.y > data.destination.y){
+						data.position.y -= 1;
+					}else{
+						data.position.y += 1;
+					}
+				}else{
+					data.direction = DIRECTION_STOP;
+					//Tell server we have reached desination.
+				}
+				printf("(%d, %d)", data.position.x, data.position.y);
+				break;
 		}
 		//If we are on a survivor ALSO HARD CODED NEEDS TO CHANGE
 		for (int i = 0; i < 3; i++){
 			if (data.position.x == data.survivors_list[i].x && data.position.y == data.survivors_list[i].y){
 				printf("\n%s\n", "FOUND SURVIVOR");
-				data.survivors_found[i].x = position.x;
-				data.survivors_found[i].y = position.y;
+				data.survivors_found[i].x = data.position.x;
+				data.survivors_found[i].y = data.position.y;
 			}
 		}
 
@@ -378,12 +421,21 @@ int getSta_cmd(int argc, char **argv){
 	return 0;
 }
 
+int setPosition_cmd(int argc, char **argv){
+	if (argc != 3){
+		printf("usage: pos X Y\n");
+		return 1;
+	}
+	data.direction = DIRECTION_POS;
+	data.destination.x = atoi(argv[1]);
+	data.destination.y = atoi(argv[2]);
+	return 0;
+}
+
 int getSta_cmd_remote(char* response){
 	mutex_lock(&data.lock);
-	//char str[128];
-	//int i;
-	sprintf(response, "STATUS energy: %d position: (%d, %d) direction: %d", data.energy, data.position.x, data.position.y, data.direction);
-
+	sprintf(response, "STATUS energy: %d position: (%d, %d) direction: %d",
+		data.energy, data.position.x, data.position.y, data.direction);
 	mutex_unlock(&data.lock);
 	return 0;
 }
@@ -414,6 +466,13 @@ int sRight_cmd_remote(char* response){
 
 int stop_cmd_remote(char* response){
 	data.direction = DIRECTION_STOP;
+	getSta_cmd_remote(response);
+	return 0;
+}
+
+int setPosition_cmd_remote(char* response){
+	data.direction = DIRECTION_POS;
+	sscanf(response, "pos %d %d\n", &data.destination.x, &data.destination.y);
 	getSta_cmd_remote(response);
 	return 0;
 }
