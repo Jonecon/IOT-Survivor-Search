@@ -12,6 +12,12 @@
 #include "net/protnum.h"
 #include "net/ipv6/addr.h"
 
+#define DIRECTION_UP 1;
+#define DIRECTION_DOWN 2;
+#define DIRECTION_LEFT 3;
+#define DIRECTION_RIGHT 4;
+#define DIRECTION_STOP 0;
+
 // DECLARING FUNCTIONS
 extern int _gnrc_netif_config(int argc, char **argv);
 extern int controller_cmd(int argc, char **argv);
@@ -21,6 +27,15 @@ struct Point {
 	int x;
 	int y;
 };
+
+typedef struct {
+    int status;
+	int energy;
+	struct Point position;
+	//Hard coded need to change.
+	struct Point survivors_found[3];
+	mutex_t lock;
+} robot_data;
 
 // DECLARING VARIABLES
 char robot_addresses[MAX_ROBOTS][24];
@@ -36,6 +51,7 @@ int numRobots = 0;
 
 struct Point border;
 struct Point position;
+static robot_data robots[MAX_ROBOTS];
 
 /* DEFINING SETS OF COMMANDS FOR THE CONTROLLER */
 static const shell_command_t shell_commands[] = {
@@ -137,7 +153,7 @@ void *controller_thread_handler(void *arg) {
 					-Don't need to reply in this thread now
 				*/
 
-				printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
+				//printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 				strcpy(message[id], "");
 			}
 			sock_udp_close(&sock);
@@ -205,19 +221,39 @@ void *logic_thread_handler(void *arg) {
 	
 	// MOVING THE ROBOT TO ITS INITIAL POSITION
 	position.x = 0;
-	for (int i = 0; i < numRobots; ++i)
-	{
+	for (int i = 0; i < numRobots; ++i) {
 		position.y = ((border.y/numRobots)*i);
 		//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		// strcpy(message[id], ("pos " + position.x + " " + position.y));
+		//sprintf(message[i], "pos %d %d", position.x, position.y);
+		// robots[i].energy = ENERGY;
+		robots[i].position.x = position.x;
+		robots[i].position.y = position.y;
+		robots[i].status = DIRECTION_RIGHT;
 
 		/* TO BE DELETED ? */
-	printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
+		printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
 	}
 
-	
+	for (unsigned int i = 0; i < sizeof(robots)/sizeof(robots[0]); ++i)
+	{
+		printf("Robot %d position (%d, %d) with status of %d\n",i, robots[i].position.x, robots[i].position.y, robots[i].status);
+		//if ()
+	}
 
-	while(1){xtimer_sleep(1);}
+	while(1) {
+
+		// START MOVING RIGHT THEN WAIT FOR A MSG WHEN A ROBOT IS STOP
+		// for (int i = 0; i < numRobots; ++i) {
+		// 	//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+		// 	strcpy(message[i], "sRight");
+		// 	robots[i].status = "sRight";
+
+		// 	/* TO BE DELETED ? */
+		// 	printf("Robot %d position (%d, %d)\n",i, position.x, position.y);
+		// }
+
+		xtimer_sleep(1);
+	}
 }
 
 int main(void) {
@@ -271,9 +307,6 @@ int controller_cmd(int argc, char **argv) {
 		sprintf(message[robotid], "%s %s %s", argv[0], argv[2], argv[3]);
 		return 0;
 		}
-	} else {
-		printf("No robot with this ID\n");
-		return 1;
 	}
 	
 
