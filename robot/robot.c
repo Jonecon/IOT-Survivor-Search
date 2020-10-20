@@ -10,11 +10,11 @@
 #include "net/gnrc/pktdump.h"
 #include "mutex.h"
 
+#define DIRECTION_STOP 0;
 #define DIRECTION_UP 1;
 #define DIRECTION_DOWN 2;
 #define DIRECTION_LEFT 3;
 #define DIRECTION_RIGHT 4;
-#define DIRECTION_STOP 0;
 #define DIRECTION_POS 5;
 
 struct Point {
@@ -56,17 +56,14 @@ void *robot_communications_thread_handler(void *arg);
 void *robot_logic_thread_handler(void *arg);
 
 //Declaring variables
-//sem_t mutex;
 uint8_t buf[16];
-//int data.direction;
-//int data.energy;
 int num_survivors;
 char com_thread_stack[THREAD_STACKSIZE_MAIN];
 char logic_thread_stack[THREAD_STACKSIZE_MAIN];
-//struct Point position;
 struct Point border;
-
-
+char message[20];
+int id;
+int sentCount;
 
 static const shell_command_t shell_commands[] = {
 	{"sUp", "Starts the robot moving in the direction UP", sUp_cmd},
@@ -79,10 +76,7 @@ static const shell_command_t shell_commands[] = {
 	{NULL, NULL, NULL}
 };
 
-
-
-int main(void)
-{
+int main(void){
 		//Setup variables to map
 		data.energy = ENERGY;
 		printf("%d\n", data.energy);
@@ -92,7 +86,8 @@ int main(void)
 		data.destination.y = 0;
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
-		//sem_init(&mutex, 0, 1);
+		id = ROBOT_ID;
+		sentCount = 0;
 
 		//Setting up survivors pos variable.
 		char str[NUM_LINES * NUM_COLUMNS];
@@ -159,14 +154,14 @@ void *robot_communications_thread_handler(void *arg){
 	printf("server waiting on port %d\n", local.port);
 
 	ssize_t res;
+	//Remote address which will be filled in by the recv function.
+	sock_udp_ep_t remote;
 	while (1) {
-		// configure a remote address, which will be filled in by recv from the arriving message
-		sock_udp_ep_t remote;
-
 		// wait for a message from the client, no more than 3s
 		// to wait forever, use SOCK_NO_TIMEOUT
 		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
 		if (res >= 0) {
+			sentCount = 0;
 			// convert IPv6 address from client to string to display on console
 			char ipv6_addr_str[IPV6_ADDR_MAX_STR_LEN];
 
@@ -250,6 +245,17 @@ void *robot_communications_thread_handler(void *arg){
 				puts("\nError receiving message");
 			}
 		}
+
+		if (strlen(message) != 0 && sentCount < 1){
+			printf("\nSending: %s", message);
+			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
+			if (sock_udp_send(&sock, message, strlen(message) + 1, &remote) < 0) {
+				puts("Error sending message");
+				sentCount += 1;
+			}else{
+				strcpy(message, "");
+			}
+		}
 	}
 	return NULL;
 }
@@ -303,6 +309,8 @@ void *robot_logic_thread_handler(void *arg){
 
 			case 0:
 				printf("(%d, %d)", data.position.x, data.position.y);
+				sprintf(message, "%d d 0 p %d %d", id, data.position.x, data.position.y);
+				//printf("stationary with message: %s\n", message);
 				break;
 
 			case 5:
@@ -337,6 +345,7 @@ void *robot_logic_thread_handler(void *arg){
 				printf("\n%s\n", "FOUND SURVIVOR");
 				data.survivors_found[i].x = data.position.x;
 				data.survivors_found[i].y = data.position.y;
+				sprintf(message, "%d f %d %d d %d", id, data.position.x, data.position.y, data.direction);
 			}
 		}
 
@@ -434,8 +443,7 @@ int setPosition_cmd(int argc, char **argv){
 
 int getSta_cmd_remote(char* response){
 	mutex_lock(&data.lock);
-	sprintf(response, "STATUS id: %d energy: %d position: (%d, %d) direction: %d",
-		ROBOT_ID, data.energy, data.position.x, data.position.y, data.direction);
+	sprintf(response, "%d e %d p %d %d d %d", id, data.energy, data.position.x, data.position.y, data.direction);
 	mutex_unlock(&data.lock);
 	return 0;
 }
