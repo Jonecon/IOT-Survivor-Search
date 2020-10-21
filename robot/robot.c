@@ -64,7 +64,8 @@ char logic_thread_stack[THREAD_STACKSIZE_MAIN];
 struct Point border;
 char message[20];
 int id;
-int sentCount;
+int	serverUnavalible;
+int sendCount;
 
 static const shell_command_t shell_commands[] = {
 	{"sUp", "Starts the robot moving in the direction UP", sUp_cmd},
@@ -88,7 +89,7 @@ int main(void){
 		border.x = NUM_LINES;
 		border.y = NUM_COLUMNS;
 		id = ROBOT_ID;
-		sentCount = 0;
+		serverUnavalible = 0;
 
 		//Setting up survivors pos variable.
 		char str[NUM_LINES * NUM_COLUMNS];
@@ -163,7 +164,8 @@ void *robot_communications_thread_handler(void *arg){
 		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
 
 		if (res >= 0) {
-			sentCount = 0;
+			serverUnavalible = 0;
+			sendCount = 0;
 			// convert IPv6 address from client to string to display on console
 			char ipv6_addr_str[IPV6_ADDR_MAX_STR_LEN];
 
@@ -257,14 +259,18 @@ void *robot_communications_thread_handler(void *arg){
 			}
 		}
 
-		if (strlen(message) != 0 && sentCount < 1){
+		if (strlen(message) != 0 &&	serverUnavalible < 1 && sendCount < 4){
 			data.energy -= strlen(message);
 			printf("\nENERGY %d \n", data.energy);
 			printf("\nSending: %s", message);
+			int id, x, y, d;
+			if ((sscanf(message, "%d f %d %d d %d", &id, &x, &y, &d)) != 4){
+				sendCount += 1;
+			}
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
 			if (sock_udp_send(&sock, message, strlen(message) + 1, &remote) < 0) {
 				puts("Error sending message");
-				sentCount += 1;
+				serverUnavalible += 1;
 			}else{
 				strcpy(message, "");
 
