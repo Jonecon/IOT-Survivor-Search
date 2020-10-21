@@ -52,18 +52,18 @@ int robotID = 0;
 int numRobots = 0;
 
 struct Point border;
-struct Point position;
+//struct Point position;
 static robot_data robots[MAX_ROBOTS];
 
 /* DEFINING SETS OF COMMANDS FOR THE CONTROLLER */
 static const shell_command_t shell_commands[] = {
-	{"sUp", "Send move up instruction to a robot", controller_cmd},
-	{"sDown", "Send move down instruction to a robot", controller_cmd},
-	{"sLeft", "Send move left instruction to a robot", controller_cmd},
-	{"sRight", "Send move right instruction to a robot", controller_cmd},
-	{"stop", "Send stop instruction to a robot", controller_cmd},
-	{"getSta", "Send get status instruction to a robot", controller_cmd},
-	{"pos", "Send pos instruction to a robot", controller_cmd},
+	{"u", "Send move up instruction to a robot", controller_cmd},
+	{"d", "Send move down instruction to a robot", controller_cmd},
+	{"l", "Send move left instruction to a robot", controller_cmd},
+	{"r", "Send move right instruction to a robot", controller_cmd},
+	{"s", "Send stop instruction to a robot", controller_cmd},
+	{"g", "Send get status instruction to a robot", controller_cmd},
+	{"p", "Send pos instruction to a robot", controller_cmd},
 	// {"getList", "List robot status", getList_cmd},
 	{NULL, NULL, NULL}
 };
@@ -215,17 +215,19 @@ void *listener_thread_handler(void* arg){
 
 			int id, energy, x, y, status, sx, sy;
 
-			if ((sscanf((char*) buf, "%d e %d p %d %d d %d", &id, &energy, &x, &y, &status)) != 1) {
+			if ((sscanf((char*) buf, "%d e %d p %d %d d %d", &id, &energy, &x, &y, &status)) == 5) {
 				robots[id].status = status;
 				robots[id].energy = energy;
 				robots[id].position.x = x;
 				robots[id].position.y = y;
-			} else if ((sscanf((char*) buf, "%d d %d p %d %d", &id, &status, &x, &y)) != 1) {
+			} else if ((sscanf((char*) buf, "%d d %d p %d %d", &id, &status, &x, &y)) == 4) {
 				robots[id].status = status;
 				robots[id].position.x = x;
 				robots[id].position.y = y;
-			} else if ((sscanf((char*) buf, "%d f %d %d d %d", &id, &sx, &sy, &status)) != 1) {
+			} else if ((sscanf((char*) buf, "%d f %d %d d %d", &id, &sx, &sy, &status)) == 4) {
 				robots[id].status = status;
+				robots[id].position.x = sx;
+				robots[id].position.y = sy;
 				robots[id].survFoundList[robots[id].survFoundCount].x = sx;
 				robots[id].survFoundList[robots[id].survFoundCount].y = sy;
 			}
@@ -239,55 +241,66 @@ void *logic_thread_handler(void *arg) {
 	// DECLARING VARIABLES
 	border.x = NUM_LINES + 1;
 	border.y = NUM_COLUMNS + 1;
+
+	int x,y;
 	
 	// MOVING THE ROBOT TO ITS INITIAL POSITION
-	position.x = 0;
+	x = 0;
 	for (int i = 0; i < numRobots; ++i) {
 
-		position.y = ((border.y/numRobots)*i);
+		y = ((border.y/numRobots)*i);
 
 		//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-		sprintf(message[i], "pos %d %d", position.x, position.y);
+		sprintf(message[i], "p %d %d", x, y);
 
 		/* TO BE DELETED ? */
-		printf("\nRobot %d position (%d, %d)",i, position.x, position.y);
+		printf("\nRobot %d position (%d, %d)",i, x, y);
+	}
+
+	xtimer_sleep(4);
+
+	for (int i = 0; i < numRobots; ++i) {
+		strcpy(message[i], "r");
+		xtimer_sleep((border.y/numRobots) + 1);
 	}
 
 	while(1) {
 
 		for (int i = 0; i < numRobots; ++i) {
 
+			/*
+			IF the robot status is 0
+				THEN IF 
+
+			*/
+
+
+
 			// START MOVING RIGHT THEN WAIT FOR A MSG WHEN A ROBOT IS STOP
-			if (robots[i].status == 5) {
-				//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-				strcpy(message[i], "sRight");
-				xtimer_sleep((border.y/numRobots) + 1);
-			}
 			
 			if (robots[i].status == 0) {
 
-				/* TO BE DELETED ? */
-				printf("\nRobot %d went here", i);
-
 				// CHECK IF ITS STOP BECAUSE IT REACHED Y BORDER 
-				if ((robots[i].position.y == 0) || (robots[i].position.y == NUM_LINES)) {
+				if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
 					
 					//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-					sprintf(message[i], "pos %d %d", position.x, (position.y + 1));
+					sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y + 1));
 
-					if (robots[i].status == 5)
+					xtimer_sleep(4);
+
+					if (robots[i].status == 0)
 					{
 						// IF IT REACHED MAX LEFT
-						if (robots[i].position.y == 0) {
+						if (robots[i].position.x == 0) {
 
 							//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-							strcpy(message[i], "sRight");
+							strcpy(message[i], "r");
 						}
 						// IF IT REACHED MAX RIGHT
-						if (robots[i].position.y == NUM_LINES) {
+						if (robots[i].position.x == NUM_LINES) {
 
 							//SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-							strcpy(message[i], "sLeft");
+							strcpy(message[i], "l");
 						}
 					}
 				}

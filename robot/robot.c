@@ -175,39 +175,43 @@ void *robot_communications_thread_handler(void *arg){
 
 
 			//WILL BE CHANGING TO TO SMALLER MESSAGE SIZE INDICATORS
-			if (strcmp((char*) buf, "sUp") == 0) {
+			if (strcmp((char*) buf, "u") == 0) {
 
 				sUp_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 					puts("\nError sending reply to client");
 				}
+				strcpy(message, "");
 
-			} else if (strcmp((char*) buf, "sDown") == 0) {
+			} else if (strcmp((char*) buf, "d") == 0) {
 
 				sDown_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 					puts("\nError sending reply to client");
 				}
+				strcpy(message, "");
 
-			} else if (strcmp((char*) buf, "sLeft") == 0) {
+			} else if (strcmp((char*) buf, "l") == 0) {
 
 				sLeft_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 					puts("\nError sending reply to client");
 				}
+				strcpy(message, "");
 
-			} else if (strcmp((char*) buf, "sRight") == 0) {
+			} else if (strcmp((char*) buf, "r") == 0) {
 
 				sRight_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
 					puts("\nError sending reply to client");
 				}
+				strcpy(message, "");
 
-			} else if (strcmp((char*) buf, "stop") == 0) {
+			} else if (strcmp((char*) buf, "s") == 0) {
 
 				stop_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
@@ -215,7 +219,7 @@ void *robot_communications_thread_handler(void *arg){
 					puts("\nError sending reply to client");
 				}
 
-			} else if (strcmp((char*) buf, "getSta") == 0) {
+			} else if (strcmp((char*) buf, "g") == 0) {
 
 				getSta_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
@@ -224,14 +228,17 @@ void *robot_communications_thread_handler(void *arg){
 				}
 			} else {
 			 	int x, y;
-				if ((sscanf((char*) buf, "pos %d %d", &x, &y)) != -1){
+				if ((sscanf((char*) buf, "p %d %d", &x, &y)) != -1){
 					setPosition_cmd_remote((char*) buf);
 					printf("Sending back %s\n", buf);
 					if (sock_udp_send(&sock, buf, strlen((char*) buf), &remote) < 0){
 						puts("\nError sending reply to client");
 					}
 				}
+				strcpy(message, "");
 			}
+
+
 			res = -1;
 		}
 		else {
@@ -308,8 +315,10 @@ void *robot_logic_thread_handler(void *arg){
 				break;
 
 			case 0:
+				if (!(data.position.x == 0 && data.position.y == 0)){
+					sprintf(message, "%d d 0 p %d %d", id, data.position.x, data.position.y);
+				}
 				printf("(%d, %d)", data.position.x, data.position.y);
-				sprintf(message, "%d d 0 p %d %d", id, data.position.x, data.position.y);
 				//printf("stationary with message: %s\n", message);
 				break;
 
@@ -480,7 +489,7 @@ int stop_cmd_remote(char* response){
 
 int setPosition_cmd_remote(char* response){
 	data.direction = DIRECTION_POS;
-	sscanf(response, "pos %d %d\n", &data.destination.x, &data.destination.y);
+	sscanf(response, "p %d %d\n", &data.destination.x, &data.destination.y);
 	getSta_cmd_remote(response);
 	return 0;
 }
