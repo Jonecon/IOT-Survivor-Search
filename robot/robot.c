@@ -10,12 +10,13 @@
 #include "net/gnrc/pktdump.h"
 #include "mutex.h"
 
-#define DIRECTION_STOP 0;
-#define DIRECTION_UP 1;
-#define DIRECTION_DOWN 2;
-#define DIRECTION_LEFT 3;
-#define DIRECTION_RIGHT 4;
-#define DIRECTION_POS 5;
+#define DIRECTION_STOP 0
+#define DIRECTION_UP 1
+#define DIRECTION_DOWN 2
+#define DIRECTION_LEFT 3
+#define DIRECTION_RIGHT 4
+#define DIRECTION_POS 5
+#define ENERGY_SCALE 100
 
 struct Point {
 	int x;
@@ -78,8 +79,8 @@ static const shell_command_t shell_commands[] = {
 
 int main(void){
 		//Setup variables to map
-		data.energy = ENERGY;
-		printf("%d\n", data.energy);
+		data.energy = ENERGY * ENERGY_SCALE;
+		printf("\nENERGY: %d\n", data.energy/ENERGY_SCALE);
 		data.position.x = 0;
 		data.position.y = 0;
 		data.destination.x = 0;
@@ -160,6 +161,7 @@ void *robot_communications_thread_handler(void *arg){
 		// wait for a message from the client, no more than 3s
 		// to wait forever, use SOCK_NO_TIMEOUT
 		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
+
 		if (res >= 0) {
 			sentCount = 0;
 			// convert IPv6 address from client to string to display on console
@@ -172,6 +174,10 @@ void *robot_communications_thread_handler(void *arg){
 
 			buf[res] = 0; // ensure null-terminated string
 			printf("\nReceived from (%s, %d): \"%s\"\t\n", ipv6_addr_str, remote.port, (char*) buf);
+
+			// DELETE FROM ENERGY
+			data.energy -= res;
+			printf("\nPRINT ENERGY %d \n", data.energy);
 
 
 			//WILL BE CHANGING TO TO SMALLER MESSAGE SIZE INDICATORS
@@ -237,8 +243,6 @@ void *robot_communications_thread_handler(void *arg){
 				}
 				strcpy(message, "");
 			}
-
-
 			res = -1;
 		}
 		else {
@@ -254,6 +258,8 @@ void *robot_communications_thread_handler(void *arg){
 		}
 
 		if (strlen(message) != 0 && sentCount < 1){
+			data.energy -= strlen(message);
+			printf("\nENERGY %d \n", data.energy);
 			printf("\nSending: %s", message);
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
 			if (sock_udp_send(&sock, message, strlen(message) + 1, &remote) < 0) {
@@ -261,6 +267,7 @@ void *robot_communications_thread_handler(void *arg){
 				sentCount += 1;
 			}else{
 				strcpy(message, "");
+
 			}
 		}
 	}
@@ -369,7 +376,7 @@ void *robot_logic_thread_handler(void *arg){
 			}
 		}
 		if (data.direction != 0){
-			data.energy -= 1;
+			data.energy -= 1 * ENERGY_SCALE;
 		}
 		mutex_unlock(&data.lock);
 	}
@@ -435,7 +442,7 @@ int getSta_cmd(int argc, char **argv){
 		return 1;
 	}
 
-	printf("energy: %d, Position: (%d, %d)\n", data.energy, data.position.x, data.position.y);
+	printf("energy: %d, Position: (%d, %d)\n", data.energy/ENERGY_SCALE, data.position.x, data.position.y);
 	return 0;
 }
 
@@ -452,7 +459,9 @@ int setPosition_cmd(int argc, char **argv){
 
 int getSta_cmd_remote(char* response){
 	mutex_lock(&data.lock);
-	sprintf(response, "%d e %d p %d %d d %d", id, data.energy, data.position.x, data.position.y, data.direction);
+	sprintf(response, "%d e %d p %d %d d %d", id, data.energy/ENERGY_SCALE, data.position.x, data.position.y, data.direction);
+	data.energy -= strlen(response);
+	printf("\nENERGY : %d \n", data.energy);
 	mutex_unlock(&data.lock);
 	return 0;
 }
@@ -490,6 +499,8 @@ int stop_cmd_remote(char* response){
 int setPosition_cmd_remote(char* response){
 	data.direction = DIRECTION_POS;
 	sscanf(response, "p %d %d\n", &data.destination.x, &data.destination.y);
+	// GET SIZE OF Message
+
 	getSta_cmd_remote(response);
 	return 0;
 }
