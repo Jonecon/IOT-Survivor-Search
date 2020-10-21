@@ -88,12 +88,6 @@ void *controller_thread_handler(void *arg) {
 
 	local.port = CONTROLLER_PORT;
 
-	/* IF THERE'S AN ERROR CREATING UDP SOCK
-	if (sock_udp_create(&sock, &local, NULL, 0) < 0) {
-		puts("Error creating UDP sock");
-		return NULL;
-	}*/
-
 	// PREPARE A REMOTE ADDRESS WHICH CORRESPOND TO THE ROBOT
 	sock_udp_ep_t remote = {.family = AF_INET6};
 	if (ipv6_addr_from_str((ipv6_addr_t *)&remote.addr.ipv6, robot_addresses[id]) == NULL) {
@@ -161,12 +155,6 @@ void *controller_thread_handler(void *arg) {
 				// ensure a null-terminated string
 				buf[res] = 0;
 
-				/* Decide what to do with this information;
-					-maybe update info on robot for the logic thread
-					-Don't need to reply in this thread now
-				*/
-
-
 				//printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 				strcpy(message[id], "");
 			}
@@ -180,12 +168,6 @@ void *controller_thread_handler(void *arg) {
 void *listener_thread_handler(void* arg){
 
 	//Here so we can display all messages recieved and are able to recieve spontaneous messages.
-	/* if the port is the same as this threads robot
-				Then we have a message to proccess and display
-				if this message
-					THEN
-				etc
-	*/
 	(void) arg;
 	sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
 	sock_udp_t sock;
@@ -204,18 +186,12 @@ void *listener_thread_handler(void* arg){
 		sock_udp_ep_t remote;
 		uint8_t buf[255];
 		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
-
-		// printf("Making it here\n");
-
 		if (res < 0) {
-			if (res == -ETIMEDOUT) {
-				printf("TIMEOUT\n");
-				for (int i = 0; i <numRobots; i++){
+			if (res == -ETIMEDOUT){
+				for (int i = 0; i < numRobots; i++){
 					robots[i].missedPings += 1;
-					printf("Missing Pings: %d\n", robots[i].missedPings);
-					if (robots[i].missedPings > NUM_COLUMNS / 2){
+					if (robots[i].missedPings > NUM_COLUMNS / 3){
 						strcpy(message[i], "g");
-						printf("Checking to see if robot %d is alive\n", i);
 					}
 				}
 
@@ -233,7 +209,6 @@ void *listener_thread_handler(void* arg){
 
 			// ensure a null-terminated string
 			buf[res] = 0;
-			// printf("Received from robot (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 			printf("Received from robot (%d): \"%s\"\n", remote.port, buf);
 
 			int id, energy, x, y, status, sx, sy;
@@ -355,7 +330,7 @@ void *logic_thread_handler(void *arg) {
 
 								// MAKE U TO K AND D TO K
 								sprintf(robots[j].flag, "k");
-								sprintf(robots[i].flag, "h");
+								sprintf(robots[i].flag, "s");
 								robots[i].helpRobotID = j;
 
 								robots[i].endPos.x = robots[j].position.x;
@@ -364,40 +339,40 @@ void *logic_thread_handler(void *arg) {
 						}
 					}
 				}
-			} else if (strcmp(robots[i].flag,"h") == 0) {
-			// } else if ((strcmp(robots[i].flag,"a") == -1) && (strcmp(robots[i].flag,"d") == -1)
-			// 	&& (strcmp(robots[i].flag,"u") == -1) && (strcmp(robots[i].flag,"k") == -1)) {
-
-				// MOVING THE ROBOT TO UNREACHABLE'S ROBOT'S FINAL KNOWN POSITION
+			} else if (strcmp(robots[i].flag, "s") == 0){
 				x = robots[robots[i].helpRobotID].endPos.x;
 				y = robots[robots[i].helpRobotID].endPos.y;
-
-				// (TELL ROBOT TO GO TO ITS UNREACHABLE'S ROBOT'S FINAL KNOWN POSITION)
 				sprintf(message[i], "p %d %d", x, y);
+				strcpy(robots[i].flag, "h");
+				xtimer_sleep(4);
 
-				/* TO BE DELETED ? */
-				printf("Robot %d Start.Pos (%d, %d) End.Pos (%d, %d)\n",i, x, y, robots[i].endPos.x, robots[i].endPos.y);
+			} else if (strcmp(robots[i].flag,"h") == 0) {
 
-				// for (int i = 0; i < numRobots; ++i) {
+				// MOVING THE ROBOT TO UNREACHABLE'S ROBOT'S FINAL KNOWN POSITION
+				//x = robots[robots[i].helpRobotID].endPos.x;
+				//y = robots[robots[i].helpRobotID].endPos.y;
+				
+				//For the list of helping robots
+				if (robots[i].status == 0){
+					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)){
+						if (robots[i].position.y != robots[i].endPos.y){
+							sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y - 1));
+							xtimer_sleep(4);
+							if (robots[i].status == 0){
+								if (robots[i].position.x == 0){
+									strcpy(message[i], "r");
+								}
 
-				// 	y = ((border.y/numRobots)*i);
-
-				// 	// (TELL ROBOT TO ITS INITIAL POS) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-				// 	sprintf(message[i], "p %d %d", x, y);
-				// 	robots[i].startPos.x = x;
-				// 	robots[i].startPos.y = y;
-
-				// 	if (i != numRobots - 1) {
-				// 		robots[i].endPos.x = NUM_COLUMNS;
-				// 		robots[i].endPos.y = ((border.y/numRobots)*(i+1))-1;
-				// 	} else {
-				// 		robots[i].endPos.x = NUM_COLUMNS;
-				// 		robots[i].endPos.y = NUM_LINES;
-				// 	}
-
-				// 	/* TO BE DELETED ? */
-				// 	printf("\nRobot %d Start.Pos (%d, %d) End.Pos (%d, %d)",i, x, y, robots[i].endPos.x, robots[i].endPos.y);
-				// }
+								if (robots[i].position.x == NUM_LINES){
+									strcpy(message[i], "l");
+								}
+							}
+						}
+						else{
+							sprintf(robots[i].flag, "d");
+						}
+					}
+				}
 			}
 			
 

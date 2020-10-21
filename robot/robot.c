@@ -382,7 +382,7 @@ void *robot_logic_thread_handler(void *arg){
 			}
 		}
 		if (data.direction != 0){
-			data.energy -= 1 * ENERGY_SCALE;
+			data.energy -= 1 * ENERGY_SCALE / 2;
 		}
 		mutex_unlock(&data.lock);
 	}
