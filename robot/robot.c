@@ -177,9 +177,8 @@ void *robot_communications_thread_handler(void *arg){
 			buf[res] = 0; // ensure null-terminated string
 			printf("\nReceived from (%s, %d): \"%s\"\t\n", ipv6_addr_str, remote.port, (char*) buf);
 
-			// DELETE FROM ENERGY
+			//Decrease energy by the size of the message (0.01 per byte scaled by 100 for internal representation)
 			data.energy -= res;
-			printf("\nPRINT ENERGY %d \n", data.energy);
 
 
 			//WILL BE CHANGING TO TO SMALLER MESSAGE SIZE INDICATORS
@@ -364,10 +363,10 @@ void *robot_logic_thread_handler(void *arg){
 		//If we are on a survivor ALSO HARD CODED NEEDS TO CHANGE
 		for (int i = 0; i < 3; i++){
 			if (data.position.x == data.survivors_list[i].x && data.position.y == data.survivors_list[i].y){
-				printf("\n%s\n", "FOUND SURVIVOR");
 				data.survivors_found[i].x = data.position.x;
 				data.survivors_found[i].y = data.position.y;
 				sprintf(message, "%d f %d %d d %d", id, data.position.x, data.position.y, data.direction);
+				printf("FOUND SURVIVOR AT: (%d, %d)", data.position.x, data.position.y);
 			}
 		}
 
@@ -377,7 +376,7 @@ void *robot_logic_thread_handler(void *arg){
 				break;
 			}
 			if (data.position.x == data.mines_list[i].x && data.position.y == data.mines_list[i].y){
-				printf("\n%s\n", "DEAD");
+				printf("\n%s\n", "HIT A MINE!");
 				while (1){}
 			}
 		}
@@ -394,7 +393,6 @@ int sUp_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	data.direction = DIRECTION_UP;
 	return 0;
 }
@@ -405,7 +403,6 @@ int sDown_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	data.direction = DIRECTION_DOWN;
 	return 0;
 }
@@ -416,7 +413,6 @@ int sLeft_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	data.direction = DIRECTION_LEFT;
 	return 0;
 }
@@ -426,7 +422,6 @@ int sRight_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	data.direction = DIRECTION_RIGHT;
 	return 0;
 }
@@ -437,7 +432,6 @@ int stop_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	data.direction = DIRECTION_STOP;
 	return 0;
 }
@@ -447,7 +441,6 @@ int getSta_cmd(int argc, char **argv){
 		printf("usage: %s\n", argv[0]);
 		return 1;
 	}
-
 	printf("energy: %d, Position: (%d, %d)\n", data.energy/ENERGY_SCALE, data.position.x, data.position.y);
 	return 0;
 }
@@ -467,7 +460,6 @@ int getSta_cmd_remote(char* response){
 	mutex_lock(&data.lock);
 	sprintf(response, "%d e %d p %d %d d %d", id, data.energy/ENERGY_SCALE, data.position.x, data.position.y, data.direction);
 	data.energy -= strlen(response);
-	printf("\nENERGY : %d \n", data.energy);
 	mutex_unlock(&data.lock);
 	return 0;
 }
@@ -505,8 +497,6 @@ int stop_cmd_remote(char* response){
 int setPosition_cmd_remote(char* response){
 	data.direction = DIRECTION_POS;
 	sscanf(response, "p %d %d\n", &data.destination.x, &data.destination.y);
-	// GET SIZE OF Message
-
 	getSta_cmd_remote(response);
 	return 0;
 }

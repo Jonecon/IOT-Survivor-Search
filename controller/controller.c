@@ -190,7 +190,7 @@ void *listener_thread_handler(void* arg){
 			if (res == -ETIMEDOUT){
 				for (int i = 0; i < numRobots; i++){
 					robots[i].missedPings += 1;
-					if (robots[i].missedPings > NUM_COLUMNS / 3){
+					if (robots[i].missedPings > (NUM_COLUMNS / 3) + 3){
 						strcpy(message[i], "g");
 					}
 				}
@@ -377,11 +377,11 @@ void *logic_thread_handler(void *arg) {
 			
 
 			/* TO BE DELETED ? */
-			printf("Robot %d Curr.Pos (%d, %d) Flag %s\n",i, robots[i].position.x, robots[i].position.y, robots[i].flag);
+			//printf("Robot %d Curr.Pos (%d, %d) Flag %s\n",i, robots[i].position.x, robots[i].position.y, robots[i].flag);
 		}
 
 		/* TO BE DELETED ? */
-		printf("\n");
+		//printf("\n");
 		xtimer_sleep(1);
 	}
 }
