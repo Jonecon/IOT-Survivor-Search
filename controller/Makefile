@@ -12,6 +12,7 @@ CONTROLLER_PORT ?= 10000
 # e.g. may be used in its logic to slice the map among robots
 NUM_LINES ?= 21
 NUM_COLUMNS ?= 21
+SPEED ?= 2
 
 # maximum number of robots that can be created
 MAX_ROBOTS ?= 15
@@ -19,7 +20,7 @@ MAX_ROBOTS ?= 15
 # list of IPv6 addresses of robots "addr1,addr2,addr3..."
 # the actual addresses need to be placed here once the robots
 # are started
-ROBOT_ADDRESSES=fe80::5c99:19ff:feec:6dfa,fe80::b412:f1ff:fe61:6e78
+ROBOT_ADDRESSES=fe80::cc93:6aff:feac:bca2,fe80::58f5:b5ff:fea1:98ae,fe80::94ce:f7ff:fea8:e7a9
 
 # list of ports that are used by robots. the port number do not 
 # need to change every time. a robot will use the n-th number in the 
@@ -33,6 +34,7 @@ CFLAGS += -DMAX_ROBOTS=$(MAX_ROBOTS)
 CFLAGS += -DROBOT_ADDRESSES=\"$(ROBOT_ADDRESSES)\"
 CFLAGS += -DROBOT_PORTS=\"$(ROBOT_PORTS)\"
 CFLAGS += -DCONTROLLER_PORT=$(CONTROLLER_PORT)
+CFLAGS += -DSPEED=$(SPEED)
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= native

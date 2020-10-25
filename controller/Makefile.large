@@ -5,10 +5,14 @@
 # name of your application
 APPLICATION = controller
 
+#controller port
+CONTROLLER_PORT ?= 10000
+
 # map
 NUM_LINES ?= 201
 NUM_COLUMNS ?= 201
 MAX_MINES ?= 4
+SPEED ?= 2
 
 # maximum number of robots that can be created
 MAX_ROBOTS ?= 15
@@ -16,12 +20,12 @@ MAX_ROBOTS ?= 15
 # list of IPv6 addresses of robots "addr1,addr2,addr3..."
 # the actual addresses need to be placed here once the robots
 # are started
-ROBOT_ADDRESSES=fe80::8ed:fff:fe1e:cc25,fe80::e:93ff:fe79:a386
+ROBOT_ADDRESSES=fe80::cc93:6aff:feac:bca2,fe80::58f5:b5ff:fea1:98ae,fe80::94ce:f7ff:fea8:e7a9,fe80::6027:b5ff:fe5e:ae11,fe80::d4f1:3bff:fea5:7050
 
 # list of ports that are used by robots. the port number do not 
 # need to change every time. a robot will use the n-th number in the 
 # list (like the ip addresses), where robot 0 is n==0
-ROBOT_PORTS=10000,20000
+ROBOT_PORTS=10000,10001,10002,10003,10004
 
 ENERGY ?= 8000 # controller may use that, but does not need to
 
@@ -31,6 +35,8 @@ CFLAGS += -DNUM_COLUMNS=$(NUM_COLUMNS)
 CFLAGS += -DMAX_ROBOTS=$(MAX_ROBOTS)
 CFLAGS += -DROBOT_ADDRESSES=\"$(ROBOT_ADDRESSES)\"
 CFLAGS += -DROBOT_PORTS=\"$(ROBOT_PORTS)\"
+CFLAGS += -DCONTROLLER_PORT=$(CONTROLLER_PORT)
+CFLAGS += -DSPEED=$(SPEED)
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
@@ -59,7 +65,7 @@ QUIET ?= 1
 BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../..
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 include $(RIOTBASE)/Makefile.include
 

@@ -18,6 +18,7 @@ MINES_LIST ?= 15,4,8,14
 
 MAX_MINES ?= 4
 ENERGY ?= 200
+SPEED ?= 2
 
 CFLAGS += -DNUM_LINES=$(NUM_LINES)
 CFLAGS += -DNUM_COLUMNS=$(NUM_COLUMNS)
@@ -27,6 +28,7 @@ CFLAGS += -DROBOT_PORT=$(ROBOT_PORT)
 CFLAGS += -DROBOT_ID=$(ROBOT_ID)
 CFLAGS += -DMAX_MINES=$(MAX_MINES)
 CFLAGS += -DENERGY=$(ENERGY)
+CFLAGS += -DSPEED=$(SPEED)
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
@@ -54,3 +56,4 @@ include $(RIOTBASE)/Makefile.include
 
 # Set a custom channel if needed
 include $(RIOTMAKE)/default-radio-settings.inc.mk
+

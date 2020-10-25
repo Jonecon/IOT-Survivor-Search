@@ -214,7 +214,6 @@ void *robot_communications_thread_handler(void *arg){
 				strcpy(message, "");
 
 			} else if (strcmp((char*) buf, "r") == 0) {
-
 				sRight_cmd_remote((char*) buf);
 				printf("Sending back %s\n", (char*) buf);
 				if (sock_udp_send(&sock, buf, strlen((char*)buf), &remote) < 0) {
@@ -239,7 +238,7 @@ void *robot_communications_thread_handler(void *arg){
 				}
 			} else {
 			 	int x, y;
-				if ((sscanf((char*) buf, "p %d %d", &x, &y)) != -1){
+				if ((sscanf((char*) buf, "p %d %d", &x, &y)) == 2){
 					setPosition_cmd_remote((char*) buf);
 					printf("Sending back %s\n", buf);
 					if (sock_udp_send(&sock, buf, strlen((char*) buf), &remote) < 0){
@@ -262,7 +261,7 @@ void *robot_communications_thread_handler(void *arg){
 			}
 		}
 
-		if (strlen(message) != 0 &&	serverUnavalible < 1 && sendCount < 4){
+		if (strlen(message) != 0 &&	serverUnavalible < 1 && sendCount < 2){
 			data.energy -= strlen(message);
 			printf("\nSending: %s", message);
 			int id, x, y, d;
@@ -275,7 +274,7 @@ void *robot_communications_thread_handler(void *arg){
 				serverUnavalible += 1;
 			}else{
 				if ((sscanf(message, "%d f %d %d d %d", &id, &x, &y, &d)) == 4){
-					res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
+					res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
 					if (res >= 0) {
 						data.energy -= res;
 						strcpy(message, "");
@@ -300,7 +299,7 @@ void *robot_logic_thread_handler(void *arg){
 	(void)arg;
 	while(1){
 		//Wait 1 second and then move.
-		xtimer_sleep(1);
+		xtimer_usleep(1000000/SPEED);
 		mutex_lock(&data.lock);
 		if (data.energy <= 0 && data.direction != 0){
 			printf("%s\n", "BATTERY DEAD");

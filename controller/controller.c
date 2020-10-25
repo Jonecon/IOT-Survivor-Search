@@ -135,30 +135,34 @@ void *controller_thread_handler(void *arg) {
 				return NULL;
 			}
 
-			// WAITING FOR A RESPONSE
-			sock_udp_ep_t remote;
-			uint8_t buf[255];
-			res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
-
-			if (res < 0) {
-				if (res == -ETIMEDOUT) {
-					puts("Timed out, no response. Message may be lost or delayed.");
-				} else {
-					puts("Error receiving message. This should not happen.");
-				}
-			}
-			else {
-				// CONVERT ROBOT ADDRESS FROM ipv6_addr_t TO STRING
-				char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
-				if (ipv6_addr_to_str(ipv6_addr, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
-					printf("Cannot convert server address\n");
-					strcpy(ipv6_addr, "???");
-				}
-
-				// ensure a null-terminated string
-				buf[res] = 0;
-
+			if (strcmp(message[id], "f") == 0){
 				strcpy(message[id], "");
+			}else{
+				// WAITING FOR A RESPONSE
+				sock_udp_ep_t remote;
+				uint8_t buf[255];
+				res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
+
+				if (res < 0) {
+					if (res == -ETIMEDOUT) {
+						puts("Timed out, no response. Message may be lost or delayed.");
+					} else {
+						puts("Error receiving message. This should not happen.");
+					}
+				}
+				else {
+					// CONVERT ROBOT ADDRESS FROM ipv6_addr_t TO STRING
+					char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
+					if (ipv6_addr_to_str(ipv6_addr, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
+						printf("Cannot convert server address\n");
+						strcpy(ipv6_addr, "???");
+					}
+
+					// ensure a null-terminated string
+					buf[res] = 0;
+
+					strcpy(message[id], "");
+				}
 			}
 			sock_udp_close(&sock);
 		}
@@ -187,12 +191,12 @@ void *listener_thread_handler(void* arg){
 		ssize_t res;
 		sock_udp_ep_t remote;
 		uint8_t buf[255];
-		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
+		res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
 		if (res < 0) {
 			if (res == -ETIMEDOUT){
 				for (int i = 0; i < numRobots; i++){
-					robots[i].missedPings += 1;
-					if (robots[i].missedPings > (NUM_COLUMNS / 3) + 3){
+					robots[i].missedPings += 1 * SPEED;
+					if (robots[i].missedPings > (NUM_COLUMNS) + 3){
 						strcpy(message[i], "g");
 					}
 				}
@@ -233,6 +237,7 @@ void *listener_thread_handler(void* arg){
 				robots[id].survFoundList[robots[id].survFoundCount].x = sx;
 				robots[id].survFoundList[robots[id].survFoundCount].y = sy;
 				robots[id].missedPings = 0;
+				strcpy(message[id], "f");
 			}
 		}
 	}
@@ -243,6 +248,7 @@ void *logic_thread_handler(void *arg) {
 
 	// DECLARING VARIABLES
 	bool notFinish = true;
+	int nothingToDoCount = 0;
 	border.x = NUM_COLUMNS + 1;
 	border.y = NUM_LINES + 1;
 
@@ -268,23 +274,24 @@ void *logic_thread_handler(void *arg) {
 		}
 
 		/* TO BE DELETED ? */
-		printf("Robot %d Start.Pos (%d, %d) End.Pos (%d, %d)\n",i, x, y, robots[i].endPos.x, robots[i].endPos.y);
+		//printf("Robot %d Start.Pos (%d, %d) End.Pos (%d, %d)\n",i, x, y, robots[i].endPos.x, robots[i].endPos.y);
 	}
 
-	xtimer_sleep(4);
+	xtimer_sleep(3);
 
 	// (TELL ALL ROBOT TO GO RIGHT) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
 	for (int i = 0; i < numRobots; ++i) {
 		strcpy(message[i], "r");
-		xtimer_sleep((border.y/numRobots) + 1);
+		xtimer_sleep((border.y/numRobots / SPEED) + 1);
 	}
 
 	while(notFinish) {
-
+		nothingToDoCount += 1;
 		/* alive(a) - done(d) - helping id(d %d) - unreachable(u) - kill(k)*/
 		for (int i = 0; i < numRobots; ++i) {
 
 			if (strcmp(robots[i].flag,"a") == 0) {
+				nothingToDoCount = 0;
 
 				// WAIT FOR A MSG WHEN A ROBOT IS STOP
 				if (robots[i].status == 0) {
@@ -298,7 +305,7 @@ void *logic_thread_handler(void *arg) {
 							// (TELL ROBOT TO GO DOWN) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
 							sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y + 1));
 
-							xtimer_sleep(4);
+							xtimer_sleep(3);
 
 							if (robots[i].status == 0)
 							{
@@ -330,6 +337,7 @@ void *logic_thread_handler(void *arg) {
 						if (strcmp(robots[i].flag,"d") == 0) {
 							// IF THE J ROBOT IS UNREACHABLE - HELP
 							if (strcmp(robots[j].flag,"u") == 0) {
+								nothingToDoCount = 0;
 
 								// MAKE U TO K AND D TO S
 								sprintf(robots[j].flag, "k");
@@ -343,28 +351,48 @@ void *logic_thread_handler(void *arg) {
 					}
 				}
 			} else if (strcmp(robots[i].flag, "s") == 0){
+				nothingToDoCount = 0;
 
 				// MOVING THE ROBOT TO UNREACHABLE'S ROBOT'S END POINT
 				x = robots[robots[i].helpRobotID].endPos.x;
 				y = robots[robots[i].helpRobotID].endPos.y;
 				sprintf(message[i], "p %d %d", x, y);
+				xtimer_sleep(((NUM_COLUMNS - x + NUM_LINES - y)/SPEED)+2);
+
+				// WAIT FOR A MSG WHEN A ROBOT IS STOP
+				if (robots[i].status == 0) {
+
+					// IF IT IS AT MAX LEFT
+					if (robots[i].position.x == 0) {
+
+						// (TELL ROBOT TO GO RIGHT) - IF IT REACHED MAX LEFT
+						strcpy(message[i], "r");
+					}
+					// IF IT IS AT MAX RIGHT
+					if (robots[i].position.x == NUM_LINES) {
+
+						// (TELL ROBOT TO GO LEFT) - IF IT REACHED MAX LEFT
+						strcpy(message[i], "l");
+					}
+				}
+
 				strcpy(robots[i].flag, "h");
-				xtimer_sleep(4);
 
 			} else if (strcmp(robots[i].flag,"h") == 0) {
-				
+				nothingToDoCount = 0;
+
 				// WAIT FOR A MSG WHEN A ROBOT IS STOP
 				if (robots[i].status == 0) {
 
 					// CHECK IF ROBOT REACHED X BORDER 
 					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
 
+						// (TELL ROBOT TO GO UP) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
+						sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y - 1));
+						xtimer_sleep(3);
+
 						// IF IT HASNT REACHED ROBOT'S END SECTION
 						if (robots[i].position.y != robots[i].endPos.y) {
-
-							// (TELL ROBOT TO GO DOWN) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
-							sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y - 1));
-							xtimer_sleep(4);
 
 							if (robots[i].status == 0) {
 
@@ -389,13 +417,8 @@ void *logic_thread_handler(void *arg) {
 			}
 		}
 
-		notFinish = false;
-		for (int i = 0; i < numRobots; ++i) {
-
-			// IF THERES STILL ROBOT
-			if ((strcmp(robots[i].flag,"h") == 0) || (strcmp(robots[i].flag,"a") == 0)) {
-				notFinish = true;
-			}
+		if (nothingToDoCount > 2){
+			notFinish = false;
 		}
 		xtimer_sleep(1);
 	}
@@ -410,7 +433,6 @@ void *logic_thread_handler(void *arg) {
 		for (unsigned int j = 0; j < (sizeof(robots[i].survFoundList)/sizeof(robots[i].survFoundList[0])); ++j)
 		{
 			if (robots[i].survFoundList[j].x == 0 && robots[i].survFoundList[j].y == 0){
-				//printf("Count: %d\n", i);
 				break;
 			}
 
@@ -418,6 +440,7 @@ void *logic_thread_handler(void *arg) {
 			printf("\t Survivor %d: (%d, %d)\n", j, robots[i].survFoundList[j].x, robots[i].survFoundList[j].y);
 		}
 	}
+
 	return NULL;
 }
 
@@ -450,11 +473,6 @@ int main(void) {
 
 	thread_create(listener_thread_stack, sizeof(listener_thread_stack), THREAD_PRIORITY_MAIN - 1,
 		THREAD_CREATE_STACKTEST, listener_thread_handler, NULL, "Listener Thread");
-
-	/*
-	for(unsigned int i = 0; i < (sizeof(robot_addresses)/sizeof(robot_addresses[0])); i++){
-		printf("robot %d address: %s\n", i, robot_addresses[i]);
-	}*/
 
 	// STARTING SHELL
 	puts("\nShell running\n");

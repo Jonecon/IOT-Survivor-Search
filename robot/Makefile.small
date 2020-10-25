@@ -1,13 +1,12 @@
-# robot Makefile to test a small map (21x21 with 2 survivors and 2 mines)
-# 
 # name of your application
 APPLICATION = robot
+
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../..
+RIOTBASE ?= $(CURDIR)/../../../../RIOT
 
 # map
 NUM_LINES ?= 21
@@ -19,6 +18,7 @@ MINES_LIST ?= 15,4,8,14
 
 MAX_MINES ?= 4
 ENERGY ?= 200
+SPEED ?= 2
 
 CFLAGS += -DNUM_LINES=$(NUM_LINES)
 CFLAGS += -DNUM_COLUMNS=$(NUM_COLUMNS)
@@ -28,6 +28,7 @@ CFLAGS += -DROBOT_PORT=$(ROBOT_PORT)
 CFLAGS += -DROBOT_ID=$(ROBOT_ID)
 CFLAGS += -DMAX_MINES=$(MAX_MINES)
 CFLAGS += -DENERGY=$(ENERGY)
+CFLAGS += -DSPEED=$(SPEED)
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present
