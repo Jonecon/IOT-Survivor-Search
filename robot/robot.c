@@ -165,7 +165,7 @@ void *robot_communications_thread_handler(void *arg){
 	while (1) {
 		// wait for a message from the client, no more than 3s
 		// to wait forever, use SOCK_NO_TIMEOUT
-		res = sock_udp_recv(&sock, buf, sizeof(buf), 3 * US_PER_SEC, &remote);
+		res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
 
 		if (res >= 0) {
 			serverUnavalible = 0;
@@ -274,7 +274,21 @@ void *robot_communications_thread_handler(void *arg){
 				puts("Error sending message");
 				serverUnavalible += 1;
 			}else{
-				strcpy(message, "");
+				if ((sscanf(message, "%d f %d %d d %d", &id, &x, &y, &d)) == 4){
+					res = sock_udp_recv(&sock, buf, sizeof(buf), 1 * US_PER_SEC, &remote);
+					if (res >= 0) {
+						data.energy -= res;
+						strcpy(message, "");
+						char ipv6_addr_str[IPV6_ADDR_MAX_STR_LEN];
+
+						if (ipv6_addr_to_str(ipv6_addr_str, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
+							/* Cannot convert client address */
+							strcpy(ipv6_addr_str, "???");
+						}
+						buf[res] = 0; // ensure null-terminated string
+						printf("\nReceived from (%s, %d): \"%s\"\t\n", ipv6_addr_str, remote.port, (char*) buf);
+					}
+				}
 
 			}
 		}
@@ -363,11 +377,10 @@ void *robot_logic_thread_handler(void *arg){
 				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 		}
-		printf("Num survs %d\n", data.num_survivors);
+
 		//If we are on a survivor ALSO HARD CODED NEEDS TO CHANGE
 		for (int i = 0; i < data.num_survivors; i++){
 			if (data.survivors_list[i].x == 0 && data.survivors_list[i].y == 0){
-				printf("Count: %d\n", i);
 				break;
 			}
 			if (data.position.x == data.survivors_list[i].x && data.position.y == data.survivors_list[i].y){
