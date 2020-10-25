@@ -1,7 +1,7 @@
 # controller Makefile to test a small map (21x21)
 # the number of survivors and mines concerns only the implementation of
 # scenario by the robot, so it's ommitted here
-# 
+#
 # name of your application
 APPLICATION = controller
 
@@ -20,10 +20,10 @@ MAX_ROBOTS ?= 15
 # list of IPv6 addresses of robots "addr1,addr2,addr3..."
 # the actual addresses need to be placed here once the robots
 # are started
-ROBOT_ADDRESSES=fe80::cc93:6aff:feac:bca2,fe80::58f5:b5ff:fea1:98ae,fe80::94ce:f7ff:fea8:e7a9
+ROBOT_ADDRESSES=fe80::cc93:6aff:feac:bca2,fe80::58f5:b5ff:fea1:98ae,fe80::94ce:f7ff:fea8:e7a9,fe80::acf1:d5ff:fe46:d199,fe80::c858:f0ff:fe04:df16
 
-# list of ports that are used by robots. the port number do not 
-# need to change every time. a robot will use the n-th number in the 
+# list of ports that are used by robots. the port number do not
+# need to change every time. a robot will use the n-th number in the
 # list (like the ip addresses), where robot 0 is n==0
 ROBOT_PORTS=10000,10001
 

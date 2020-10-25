@@ -54,6 +54,7 @@ char message[MAX_ROBOTS][20];
 uint8_t buf[255];
 
 int robotID = 0;
+bool notFinish = true;
 int numRobots = 0;
 
 struct Point border;
@@ -100,7 +101,7 @@ void *controller_thread_handler(void *arg) {
 	// configure the underlying network such that all packets transmitted will reach a server
 	ipv6_addr_set_all_nodes_multicast((ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MCAST_SCP_LINK_LOCAL);
 
-	while (1) {
+	while (notFinish) {
 		int count;
 		// IF THERE IS NO COMMAND
 		if (strlen(message[id]) == 0) {
@@ -117,7 +118,7 @@ void *controller_thread_handler(void *arg) {
 				} else if (strcmp(robots[id].flag,"h") == 0) {
 					sprintf(robots[id].flag, "k");
 				}
-				
+
 				return NULL;
 			}
 			// IF THERE'S AN ERROR CREATING UDP SOCK
@@ -125,7 +126,7 @@ void *controller_thread_handler(void *arg) {
 				puts("Error creating UDP sock");
 				return NULL;
 			}
-			
+
 			printf("Sending: %s to robot id: %d\n", message[id], id);
 
 			// TRANSMITTING THE MESSAGE TO THE ROBOT[id] WHILE CHECKING
@@ -186,7 +187,7 @@ void *listener_thread_handler(void* arg){
 		return NULL;
 	}
 
-	while (1){
+	while (notFinish){
 
 		ssize_t res;
 		sock_udp_ep_t remote;
@@ -195,7 +196,7 @@ void *listener_thread_handler(void* arg){
 		if (res < 0) {
 			if (res == -ETIMEDOUT){
 				for (int i = 0; i < numRobots; i++){
-					robots[i].missedPings += 1 * SPEED;
+					robots[i].missedPings += 1;
 					if (robots[i].missedPings > (NUM_COLUMNS) + 3){
 						strcpy(message[i], "g");
 					}
@@ -241,19 +242,20 @@ void *listener_thread_handler(void* arg){
 			}
 		}
 	}
+	return NULL;
 }
 
 void *logic_thread_handler(void *arg) {
 	(void)arg;
 
 	// DECLARING VARIABLES
-	bool notFinish = true;
+	notFinish = true;
 	int nothingToDoCount = 0;
 	border.x = NUM_COLUMNS + 1;
 	border.y = NUM_LINES + 1;
 
 	int x,y;
-	
+
 	// MOVING THE ROBOT TO ITS INITIAL POSITION
 	x = 0;
 	for (int i = 0; i < numRobots; ++i) {
@@ -296,9 +298,9 @@ void *logic_thread_handler(void *arg) {
 				// WAIT FOR A MSG WHEN A ROBOT IS STOP
 				if (robots[i].status == 0) {
 
-					// CHECK IF ROBOT REACHED X BORDER 
+					// CHECK IF ROBOT REACHED X BORDER
 					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
-						
+
 						// IF IT HASNT REACHED ROBOT'S END SECTION
 						if (robots[i].position.y != robots[i].endPos.y) {
 
@@ -384,7 +386,7 @@ void *logic_thread_handler(void *arg) {
 				// WAIT FOR A MSG WHEN A ROBOT IS STOP
 				if (robots[i].status == 0) {
 
-					// CHECK IF ROBOT REACHED X BORDER 
+					// CHECK IF ROBOT REACHED X BORDER
 					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
 
 						// (TELL ROBOT TO GO UP) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
@@ -485,7 +487,7 @@ int main(void) {
 
 /* DECLARING FUNCTIONS */
 int controller_cmd(int argc, char **argv) {
-	
+
 	//IF USER DID NOT PUT ROBOT ID
 	if ((argc != 2) && (argc != 4)) {
 		printf("usage: %s robot_id\n", argv[0]);
