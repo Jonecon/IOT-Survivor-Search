@@ -1,0 +1,18 @@
+This folder contains the output files from each execution of the small map:
+
+	output-small-c.txt for the controller output 
+	output-small-r0.txt for the robot 0 output
+	output-small-r1.txt for the robot 1 output
+
+The following commands were typed on the controller: 
+
+1. 
+"MV 1 0 10" to ask robot 1 to start moving towards coordinates 0,10 (it follows an "L")
+
+2.
+"RIGHT 0" to ask robot 0 to start searching to the right, advancing line by line.
+
+
+3. 
+After robot 1 had reached the position 0,10. 
+"RIGHT 1" to ask robot 1 to start searching to the right, advancing line by line.

@@ -40,8 +40,7 @@ typedef struct {
 	struct Point position;
 	struct Point startPos;
 	struct Point endPos;
-	//Hard coded need to change.
-	struct Point survFoundList[3];
+	struct Point survFoundList[NUM_LINES * NUM_COLUMNS];
 	mutex_t lock;
 } robot_data;
 
@@ -70,7 +69,6 @@ static const shell_command_t shell_commands[] = {
 	{"s", "Send stop instruction to a robot", controller_cmd},
 	{"g", "Send get status instruction to a robot", controller_cmd},
 	{"p", "Send pos instruction to a robot", controller_cmd},
-	// {"getList", "List robot status", getList_cmd},
 	{NULL, NULL, NULL}
 };
 
@@ -114,7 +112,12 @@ void *controller_thread_handler(void *arg) {
 			ssize_t res;
 			count++;
 			if (count > 3){
-				sprintf(robots[id].flag, "u");
+				if (strcmp(robots[id].flag,"a") == 0) {
+					sprintf(robots[id].flag, "u");
+				} else if (strcmp(robots[id].flag,"h") == 0) {
+					sprintf(robots[id].flag, "k");
+				}
+				
 				return NULL;
 			}
 			// IF THERE'S AN ERROR CREATING UDP SOCK
@@ -155,7 +158,6 @@ void *controller_thread_handler(void *arg) {
 				// ensure a null-terminated string
 				buf[res] = 0;
 
-				//printf("Received from server (%s, %d): \"%s\"\n", ipv6_addr, remote.port, buf);
 				strcpy(message[id], "");
 			}
 			sock_udp_close(&sock);
@@ -203,7 +205,7 @@ void *listener_thread_handler(void* arg){
 			// CONVERT ROBOT ADDRESS FROM ipv6_addr_t TO STRING
 			char ipv6_addr[IPV6_ADDR_MAX_STR_LEN];
 			if (ipv6_addr_to_str(ipv6_addr, (ipv6_addr_t *)&remote.addr.ipv6, IPV6_ADDR_MAX_STR_LEN ) == NULL) {
-				printf("\nCannot convert server address\n");
+				printf("Cannot convert server address\n");
 				strcpy(ipv6_addr, "???");
 			}
 
@@ -240,6 +242,7 @@ void *logic_thread_handler(void *arg) {
 	(void)arg;
 
 	// DECLARING VARIABLES
+	bool notFinish = true;
 	border.x = NUM_COLUMNS + 1;
 	border.y = NUM_LINES + 1;
 
@@ -276,7 +279,7 @@ void *logic_thread_handler(void *arg) {
 		xtimer_sleep((border.y/numRobots) + 1);
 	}
 
-	while(1) {
+	while(notFinish) {
 
 		/* alive(a) - done(d) - helping id(d %d) - unreachable(u) - kill(k)*/
 		for (int i = 0; i < numRobots; ++i) {
@@ -289,7 +292,7 @@ void *logic_thread_handler(void *arg) {
 					// CHECK IF ROBOT REACHED X BORDER 
 					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
 						
-						// IF IT HASNT REACHED ROBOT"S END SECTION
+						// IF IT HASNT REACHED ROBOT'S END SECTION
 						if (robots[i].position.y != robots[i].endPos.y) {
 
 							// (TELL ROBOT TO GO DOWN) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
@@ -328,7 +331,7 @@ void *logic_thread_handler(void *arg) {
 							// IF THE J ROBOT IS UNREACHABLE - HELP
 							if (strcmp(robots[j].flag,"u") == 0) {
 
-								// MAKE U TO K AND D TO K
+								// MAKE U TO K AND D TO S
 								sprintf(robots[j].flag, "k");
 								sprintf(robots[i].flag, "s");
 								robots[i].helpRobotID = j;
@@ -340,6 +343,8 @@ void *logic_thread_handler(void *arg) {
 					}
 				}
 			} else if (strcmp(robots[i].flag, "s") == 0){
+
+				// MOVING THE ROBOT TO UNREACHABLE'S ROBOT'S END POINT
 				x = robots[robots[i].helpRobotID].endPos.x;
 				y = robots[robots[i].helpRobotID].endPos.y;
 				sprintf(message[i], "p %d %d", x, y);
@@ -347,43 +352,73 @@ void *logic_thread_handler(void *arg) {
 				xtimer_sleep(4);
 
 			} else if (strcmp(robots[i].flag,"h") == 0) {
-
-				// MOVING THE ROBOT TO UNREACHABLE'S ROBOT'S FINAL KNOWN POSITION
-				//x = robots[robots[i].helpRobotID].endPos.x;
-				//y = robots[robots[i].helpRobotID].endPos.y;
 				
-				//For the list of helping robots
-				if (robots[i].status == 0){
-					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)){
-						if (robots[i].position.y != robots[i].endPos.y){
+				// WAIT FOR A MSG WHEN A ROBOT IS STOP
+				if (robots[i].status == 0) {
+
+					// CHECK IF ROBOT REACHED X BORDER 
+					if ((robots[i].position.x == 0) || (robots[i].position.x == NUM_LINES)) {
+
+						// IF IT HASNT REACHED ROBOT'S END SECTION
+						if (robots[i].position.y != robots[i].endPos.y) {
+
+							// (TELL ROBOT TO GO DOWN) - SET MESSAGE[robot_id] WITH THE COMMAND TO BE SENT
 							sprintf(message[i], "p %d %d", robots[i].position.x, (robots[i].position.y - 1));
 							xtimer_sleep(4);
-							if (robots[i].status == 0){
-								if (robots[i].position.x == 0){
+
+							if (robots[i].status == 0) {
+
+								// IF IT REACHED MAX LEFT
+								if (robots[i].position.x == 0) {
+
+									// (TELL ROBOT TO GO RIGHT) - IF IT REACHED MAX LEFT
 									strcpy(message[i], "r");
 								}
+								// IF IT REACHED MAX RIGHT
+								if (robots[i].position.x == NUM_LINES) {
 
-								if (robots[i].position.x == NUM_LINES){
+									// (TELL ROBOT TO GO LEFT) - IF IT REACHED MAX LEFT
 									strcpy(message[i], "l");
 								}
 							}
-						}
-						else{
+						} else {
 							sprintf(robots[i].flag, "d");
 						}
 					}
 				}
 			}
-			
-
-			/* TO BE DELETED ? */
-			//printf("Robot %d Curr.Pos (%d, %d) Flag %s\n",i, robots[i].position.x, robots[i].position.y, robots[i].flag);
 		}
 
-		/* TO BE DELETED ? */
-		//printf("\n");
+		notFinish = false;
+		for (int i = 0; i < numRobots; ++i) {
+
+			// IF THERES STILL ROBOT
+			if ((strcmp(robots[i].flag,"h") == 0) || (strcmp(robots[i].flag,"a") == 0)) {
+				notFinish = true;
+			}
+		}
 		xtimer_sleep(1);
 	}
+
+	// IF EVERY ROBOT IS DEAD
+	printf("Found Survivors\n");
+	for (int i = 0; i < numRobots; ++i) {
+
+		// PRINT SURVIVOR'S COORD
+		printf("Robot %d found:\n", i);
+
+		for (unsigned int j = 0; j < (sizeof(robots[i].survFoundList)/sizeof(robots[i].survFoundList[0])); ++j)
+		{
+			if (robots[i].survFoundList[j].x == 0 && robots[i].survFoundList[j].y == 0){
+				//printf("Count: %d\n", i);
+				break;
+			}
+
+			// PRINT SURVIVOR'S COORD
+			printf("\t Survivor %d: (%d, %d)\n", j, robots[i].survFoundList[j].x, robots[i].survFoundList[j].y);
+		}
+	}
+	return NULL;
 }
 
 int main(void) {

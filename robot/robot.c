@@ -25,14 +25,15 @@ struct Point {
 
 typedef struct {
     int direction;
-		int energy;
-		struct Point position;
-		struct Point destination;
-		//Hard coded need to change.
-		struct Point survivors_list[3];
-		struct Point survivors_found[3];
-		struct Point mines_list[MAX_MINES];
-		mutex_t lock;
+	int energy;
+	int num_survivors;
+	int num_mines;
+	struct Point position;
+	struct Point destination;
+	struct Point survivors_list[NUM_LINES * NUM_COLUMNS];
+	struct Point survivors_found[NUM_LINES * NUM_COLUMNS];
+	struct Point mines_list[MAX_MINES];
+	mutex_t lock;
 } data_t;
 
 static data_t data;
@@ -58,7 +59,8 @@ void *robot_logic_thread_handler(void *arg);
 
 //Declaring variables
 uint8_t buf[16];
-int num_survivors;
+//int num_survivors;
+//int num_mines;
 char com_thread_stack[THREAD_STACKSIZE_MAIN];
 char logic_thread_stack[THREAD_STACKSIZE_MAIN];
 struct Point border;
@@ -103,7 +105,8 @@ int main(void){
 			id++;
 			token = strtok(NULL, ",");
 		}
-		num_survivors = id;
+		printf("Num survs: %d\n", id);
+		data.num_survivors = id;
 
 		//Setting up mines pos variable
 		strcpy(str, MINES_LIST);
@@ -116,6 +119,7 @@ int main(void){
 			id++;
 			token = strtok(NULL, ",");
 		}
+		data.num_mines = id;
 
 		//Setup communication thread
 		thread_create(com_thread_stack, sizeof(com_thread_stack), THREAD_PRIORITY_MAIN - 3,
@@ -260,7 +264,6 @@ void *robot_communications_thread_handler(void *arg){
 
 		if (strlen(message) != 0 &&	serverUnavalible < 1 && sendCount < 4){
 			data.energy -= strlen(message);
-			printf("\nENERGY %d \n", data.energy);
 			printf("\nSending: %s", message);
 			int id, x, y, d;
 			if ((sscanf(message, "%d f %d %d d %d", &id, &x, &y, &d)) != 4){
@@ -360,8 +363,13 @@ void *robot_logic_thread_handler(void *arg){
 				printf("(%d, %d)", data.position.x, data.position.y);
 				break;
 		}
+		printf("Num survs %d\n", data.num_survivors);
 		//If we are on a survivor ALSO HARD CODED NEEDS TO CHANGE
-		for (int i = 0; i < 3; i++){
+		for (int i = 0; i < data.num_survivors; i++){
+			if (data.survivors_list[i].x == 0 && data.survivors_list[i].y == 0){
+				printf("Count: %d\n", i);
+				break;
+			}
 			if (data.position.x == data.survivors_list[i].x && data.position.y == data.survivors_list[i].y){
 				data.survivors_found[i].x = data.position.x;
 				data.survivors_found[i].y = data.position.y;
@@ -371,10 +379,7 @@ void *robot_logic_thread_handler(void *arg){
 		}
 
 		//If we landed on a bomb
-		for (int i = 0; i < MAX_MINES; i++){
-			if (data.mines_list[i].x == 0 && data.mines_list[i].y == 0){
-				break;
-			}
+		for (int i = 0; i < data.num_mines; i++){
 			if (data.position.x == data.mines_list[i].x && data.position.y == data.mines_list[i].y){
 				printf("\n%s\n", "HIT A MINE!");
 				while (1){}

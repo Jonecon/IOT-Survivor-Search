@@ -1,0 +1,22 @@
+RIOT native interrupts/signals initialized.
+LED_RED_OFF
+LED_GREEN_ON
+RIOT native board initialized.
+RIOT native hardware initialization complete.
+
+main(): This is RIOT! (Version: 2021.01-devel-77-gf6e75)
+RIOT survivor controller application
+controller thread handler for robot 0 waiting for commands from console
+controller thread handler for robot 1 waiting for commands from console
+All up, running the shell now
+> MV 1 0 100  
+MV 1 0 100
+> STA E=15999.92 POS=(0,0) HEA=5 SRV={.}
+
+RIGHT 0
+RIGHT 0
+> STA E=15999.95 POS=(0,0) HEA=4 SRV={.}
+
+RIGHT 1
+RIGHT 1
+> STA E=15899.52 POS=(0,100) HEA=4 SRV={.}

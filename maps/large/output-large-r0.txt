@@ -1,0 +1,170 @@
+RIOT native interrupts/signals initialized.
+LED_RED_OFF
+LED_GREEN_ON
+RIOT native board initialized.
+RIOT native hardware initialization complete.
+
+main(): This is RIOT! (Version: 2021.01-devel-77-gf6e75)
+Configured network interfaces:
+Iface  5  HWaddr: E6:19:26:F9:4E:82 
+          L2-PDU:1500  MTU:1500  HL:64  RTR  
+          RTR_ADV  
+          Source address length: 6
+          Link type: wired
+          inet6 addr: fe80::e419:26ff:fef9:4e82  scope: link  TNT[1]
+          inet6 group: ff02::2
+          inet6 group: ff02::1
+          inet6 group: ff02::1:fff9:4e82
+          
+RIOT survivor robot application
+
+robot 0 waiting for commands at port 10000)
+All up, running the shell now
+> STA E=1599995 POS=(0,0) HEA=4 SRV=.
+DIRECTION_LEFT at 200,1 - ENERGY 15798
+DIRECTION_RIGHT at 0,2 - ENERGY 15597
+DIRECTION_LEFT at 200,3 - ENERGY 15396
+DIRECTION_RIGHT at 0,4 - ENERGY 15195
+DIRECTION_LEFT at 200,5 - ENERGY 14994
+
+
+&@@@         @@@@#         @@@
+   @@@#     @@@@@@@     @@@@  
+     @@@@   #@@@@@    @@@@     
+        @@@@@@@@@@@@@@@        
+          @@@@@@@@@@@          
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+
+robot found survivor at 166,5
+
+DIRECTION_RIGHT at 0,6 - ENERGY 14793
+
+
+&@@@         @@@@#         @@@
+   @@@#     @@@@@@@     @@@@  
+     @@@@   #@@@@@    @@@@     
+        @@@@@@@@@@@@@@@        
+          @@@@@@@@@@@          
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+
+robot found survivor at 9,6
+
+DIRECTION_LEFT at 200,7 - ENERGY 14592
+DIRECTION_RIGHT at 0,8 - ENERGY 14391
+DIRECTION_LEFT at 200,9 - ENERGY 14190
+DIRECTION_RIGHT at 0,10 - ENERGY 13989
+DIRECTION_LEFT at 200,11 - ENERGY 13788
+DIRECTION_RIGHT at 0,12 - ENERGY 13587
+DIRECTION_LEFT at 200,13 - ENERGY 13386
+DIRECTION_RIGHT at 0,14 - ENERGY 13185
+DIRECTION_LEFT at 200,15 - ENERGY 12984
+DIRECTION_RIGHT at 0,16 - ENERGY 12783
+DIRECTION_LEFT at 200,17 - ENERGY 12582
+DIRECTION_RIGHT at 0,18 - ENERGY 12381
+DIRECTION_LEFT at 200,19 - ENERGY 12180
+DIRECTION_RIGHT at 0,20 - ENERGY 11979
+DIRECTION_LEFT at 200,21 - ENERGY 11778
+DIRECTION_RIGHT at 0,22 - ENERGY 11577
+DIRECTION_LEFT at 200,23 - ENERGY 11376
+DIRECTION_RIGHT at 0,24 - ENERGY 11175
+DIRECTION_LEFT at 200,25 - ENERGY 10974
+DIRECTION_RIGHT at 0,26 - ENERGY 10773
+DIRECTION_LEFT at 200,27 - ENERGY 10572
+DIRECTION_RIGHT at 0,28 - ENERGY 10371
+DIRECTION_LEFT at 200,29 - ENERGY 10170
+DIRECTION_RIGHT at 0,30 - ENERGY 9969
+DIRECTION_LEFT at 200,31 - ENERGY 9768
+DIRECTION_RIGHT at 0,32 - ENERGY 9567
+DIRECTION_LEFT at 200,33 - ENERGY 9366
+DIRECTION_RIGHT at 0,34 - ENERGY 9165
+DIRECTION_LEFT at 200,35 - ENERGY 8964
+DIRECTION_RIGHT at 0,36 - ENERGY 8763
+DIRECTION_LEFT at 200,37 - ENERGY 8562
+DIRECTION_RIGHT at 0,38 - ENERGY 8361
+DIRECTION_LEFT at 200,39 - ENERGY 8160
+DIRECTION_RIGHT at 0,40 - ENERGY 7959
+DIRECTION_LEFT at 200,41 - ENERGY 7758
+DIRECTION_RIGHT at 0,42 - ENERGY 7557
+DIRECTION_LEFT at 200,43 - ENERGY 7356
+DIRECTION_RIGHT at 0,44 - ENERGY 7155
+DIRECTION_LEFT at 200,45 - ENERGY 6954
+DIRECTION_RIGHT at 0,46 - ENERGY 6753
+DIRECTION_LEFT at 200,47 - ENERGY 6552
+DIRECTION_RIGHT at 0,48 - ENERGY 6351
+DIRECTION_LEFT at 200,49 - ENERGY 6150
+DIRECTION_RIGHT at 0,50 - ENERGY 5949
+DIRECTION_LEFT at 200,51 - ENERGY 5748
+DIRECTION_RIGHT at 0,52 - ENERGY 5547
+DIRECTION_LEFT at 200,53 - ENERGY 5346
+DIRECTION_RIGHT at 0,54 - ENERGY 5145
+DIRECTION_LEFT at 200,55 - ENERGY 4944
+DIRECTION_RIGHT at 0,56 - ENERGY 4743
+DIRECTION_LEFT at 200,57 - ENERGY 4542
+DIRECTION_RIGHT at 0,58 - ENERGY 4341
+DIRECTION_LEFT at 200,59 - ENERGY 4140
+DIRECTION_RIGHT at 0,60 - ENERGY 3939
+DIRECTION_LEFT at 200,61 - ENERGY 3738
+DIRECTION_RIGHT at 0,62 - ENERGY 3537
+DIRECTION_LEFT at 200,63 - ENERGY 3336
+DIRECTION_RIGHT at 0,64 - ENERGY 3135
+DIRECTION_LEFT at 200,65 - ENERGY 2934
+DIRECTION_RIGHT at 0,66 - ENERGY 2733
+DIRECTION_LEFT at 200,67 - ENERGY 2532
+DIRECTION_RIGHT at 0,68 - ENERGY 2331
+DIRECTION_LEFT at 200,69 - ENERGY 2130
+DIRECTION_RIGHT at 0,70 - ENERGY 1929
+DIRECTION_LEFT at 200,71 - ENERGY 1728
+DIRECTION_RIGHT at 0,72 - ENERGY 1527
+DIRECTION_LEFT at 200,73 - ENERGY 1326
+DIRECTION_RIGHT at 0,74 - ENERGY 1125
+DIRECTION_LEFT at 200,75 - ENERGY 924
+DIRECTION_RIGHT at 0,76 - ENERGY 723
+
+
+                                          (@@@@@@&
+                                        *@@      @@&        .        
+                                       /@@        &@&    %  %% %  ./ 
+                                       @@          &@%    #(((/(/%   
+                                      %@&           .@@@@&%((////%/  
+                                  @&&%@@                  %(%//#(%   
+                            .@@@@@@@@@@@@@@&&               %*.%  ,  
+                       &@@@@@@@@@@@@@@@@@@@@(                        
+                    @@@@@%,,,,,,,,,@@@@@@@@@@@@(                     
+                  @@@@*,,,,,*@@@@@@@@@@@@@@@@@@@@#                   
+                @@@@,,,,*(@@@@@@@@@@@@@@@@@@@@@@@@@,                 
+               @@@@,,,,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                
+              .@@@,,,,%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.               
+              @@@,,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+              @@@,,,,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+              *@@,,,,*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+               @@@,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                
+                @@@,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                 
+                 .@@(,,,*@@@@@@@@@@@@@@@@@@@@@@@@@,                  
+                    @@@%,,,@@@@@@@@@@@@@@@@@@@@&,                    
+                      .@@@@@@@@@@@@@@@@@@@@@%,                       
+                           .&@@@@@@@@@@(,                            
+
+
+

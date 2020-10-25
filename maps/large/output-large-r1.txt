@@ -1,0 +1,156 @@
+RIOT native interrupts/signals initialized.
+LED_RED_OFF
+LED_GREEN_ON
+RIOT native board initialized.
+RIOT native hardware initialization complete.
+
+main(): This is RIOT! (Version: 2021.01-devel-77-gf6e75)
+Configured network interfaces:
+Iface  5  HWaddr: FA:30:64:B7:65:2B 
+          L2-PDU:1500  MTU:1500  HL:64  RTR  
+          RTR_ADV  
+          Source address length: 6
+          Link type: wired
+          inet6 addr: fe80::f830:64ff:feb7:652b  scope: link  TNT[1]
+          inet6 group: ff02::2
+          inet6 group: ff02::1
+          inet6 group: ff02::1:ffb7:652b
+          
+RIOT survivor robot application
+
+robot 1 waiting for commands at port 20000)
+All up, running the shell now
+> STA E=1599992 POS=(0,0) HEA=5 SRV=.
+STOPPED at 0,100 - ENERGY 15899
+STA E=1589952 POS=(0,100) HEA=4 SRV=.
+DIRECTION_LEFT at 200,101 - ENERGY 15698
+DIRECTION_RIGHT at 0,102 - ENERGY 15497
+DIRECTION_LEFT at 200,103 - ENERGY 15296
+DIRECTION_RIGHT at 0,104 - ENERGY 15095
+DIRECTION_LEFT at 200,105 - ENERGY 14894
+DIRECTION_RIGHT at 0,106 - ENERGY 14693
+DIRECTION_LEFT at 200,107 - ENERGY 14492
+DIRECTION_RIGHT at 0,108 - ENERGY 14291
+DIRECTION_LEFT at 200,109 - ENERGY 14090
+DIRECTION_RIGHT at 0,110 - ENERGY 13889
+DIRECTION_LEFT at 200,111 - ENERGY 13688
+DIRECTION_RIGHT at 0,112 - ENERGY 13487
+DIRECTION_LEFT at 200,113 - ENERGY 13286
+DIRECTION_RIGHT at 0,114 - ENERGY 13085
+DIRECTION_LEFT at 200,115 - ENERGY 12884
+DIRECTION_RIGHT at 0,116 - ENERGY 12683
+DIRECTION_LEFT at 200,117 - ENERGY 12482
+DIRECTION_RIGHT at 0,118 - ENERGY 12281
+DIRECTION_LEFT at 200,119 - ENERGY 12080
+DIRECTION_RIGHT at 0,120 - ENERGY 11879
+DIRECTION_LEFT at 200,121 - ENERGY 11678
+DIRECTION_RIGHT at 0,122 - ENERGY 11477
+
+
+&@@@         @@@@#         @@@
+   @@@#     @@@@@@@     @@@@  
+     @@@@   #@@@@@    @@@@     
+        @@@@@@@@@@@@@@@        
+          @@@@@@@@@@@          
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+
+robot found survivor at 47,122
+
+DIRECTION_LEFT at 200,123 - ENERGY 11276
+DIRECTION_RIGHT at 0,124 - ENERGY 11075
+DIRECTION_LEFT at 200,125 - ENERGY 10874
+DIRECTION_RIGHT at 0,126 - ENERGY 10673
+DIRECTION_LEFT at 200,127 - ENERGY 10472
+DIRECTION_RIGHT at 0,128 - ENERGY 10271
+DIRECTION_LEFT at 200,129 - ENERGY 10070
+DIRECTION_RIGHT at 0,130 - ENERGY 9869
+DIRECTION_LEFT at 200,131 - ENERGY 9668
+DIRECTION_RIGHT at 0,132 - ENERGY 9467
+DIRECTION_LEFT at 200,133 - ENERGY 9266
+DIRECTION_RIGHT at 0,134 - ENERGY 9065
+DIRECTION_LEFT at 200,135 - ENERGY 8864
+DIRECTION_RIGHT at 0,136 - ENERGY 8663
+DIRECTION_LEFT at 200,137 - ENERGY 8462
+DIRECTION_RIGHT at 0,138 - ENERGY 8261
+DIRECTION_LEFT at 200,139 - ENERGY 8060
+DIRECTION_RIGHT at 0,140 - ENERGY 7859
+DIRECTION_LEFT at 200,141 - ENERGY 7658
+DIRECTION_RIGHT at 0,142 - ENERGY 7457
+DIRECTION_LEFT at 200,143 - ENERGY 7256
+DIRECTION_RIGHT at 0,144 - ENERGY 7055
+DIRECTION_LEFT at 200,145 - ENERGY 6854
+DIRECTION_RIGHT at 0,146 - ENERGY 6653
+DIRECTION_LEFT at 200,147 - ENERGY 6452
+DIRECTION_RIGHT at 0,148 - ENERGY 6251
+DIRECTION_LEFT at 200,149 - ENERGY 6050
+DIRECTION_RIGHT at 0,150 - ENERGY 5849
+DIRECTION_LEFT at 200,151 - ENERGY 5648
+DIRECTION_RIGHT at 0,152 - ENERGY 5447
+DIRECTION_LEFT at 200,153 - ENERGY 5246
+DIRECTION_RIGHT at 0,154 - ENERGY 5045
+DIRECTION_LEFT at 200,155 - ENERGY 4844
+DIRECTION_RIGHT at 0,156 - ENERGY 4643
+DIRECTION_LEFT at 200,157 - ENERGY 4442
+DIRECTION_RIGHT at 0,158 - ENERGY 4241
+DIRECTION_LEFT at 200,159 - ENERGY 4040
+DIRECTION_RIGHT at 0,160 - ENERGY 3839
+DIRECTION_LEFT at 200,161 - ENERGY 3638
+DIRECTION_RIGHT at 0,162 - ENERGY 3437
+DIRECTION_LEFT at 200,163 - ENERGY 3236
+DIRECTION_RIGHT at 0,164 - ENERGY 3035
+DIRECTION_LEFT at 200,165 - ENERGY 2834
+DIRECTION_RIGHT at 0,166 - ENERGY 2633
+DIRECTION_LEFT at 200,167 - ENERGY 2432
+DIRECTION_RIGHT at 0,168 - ENERGY 2231
+DIRECTION_LEFT at 200,169 - ENERGY 2030
+DIRECTION_RIGHT at 0,170 - ENERGY 1829
+DIRECTION_LEFT at 200,171 - ENERGY 1628
+DIRECTION_RIGHT at 0,172 - ENERGY 1427
+DIRECTION_LEFT at 200,173 - ENERGY 1226
+DIRECTION_RIGHT at 0,174 - ENERGY 1025
+DIRECTION_LEFT at 200,175 - ENERGY 824
+DIRECTION_RIGHT at 0,176 - ENERGY 623
+DIRECTION_LEFT at 200,177 - ENERGY 422
+DIRECTION_RIGHT at 0,178 - ENERGY 221
+DIRECTION_LEFT at 200,179 - ENERGY 20
+
+
+                                            (                 
+                                          ,@                  
+                                         %@&                  
+                                        @@@                   
+                                      (@@@%                   
+                                     @@@@@                    
+                                   ,@@@@@%                    
+                                  &@@@@@@                     
+                                 @@@@@@@@                     
+                               (@@@@@@@@                      
+                              @@@@@@@@@&,/(%%%&&&&@@@@@@@@.   
+                            ,@@@@@@@@@@@@@@@@@@@@@@@@@@@.     
+                           @@@@@@@@@@@@@@@@@@@@@@@@@@@.       
+                          @@@@@@@@@@@@@@@@@@@@@@@@@@,         
+                        #@@@@@@@(,     *@@@@@@@@@@,           
+                                      /@@@@@@@@@*             
+                                     #@@@@@@@@(               
+                                    #@@@@@@@(                 
+                                   %@@@@@@%                   
+                                  &@@@@@%                     
+                                 @@@@@%                       
+                                @@@@@                         
+                               @@@@                           
+                              @@@                             
+                             @@                               
+                            @                                 
+                          .                                   
+

@@ -1,0 +1,21 @@
+This folder contains the output files from each execution of the large map:
+
+	output-large-c.txt for the controller output 
+	output-large-r0.txt for the robot 0 output
+	output-large-r1.txt for the robot 1 output
+
+The following commands were typed on the controller: 
+
+1. 
+"MV 1 0 100" to ask robot 1 to start moving towards coordinates 0,100 (it follows an "L")
+
+2.
+"RIGHT 0" to ask robot 0 to start searching to the right, advancing line by line.
+
+
+3. 
+After robot 1 had reached the position 0,100. 
+"RIGHT 1" to ask robot 1 to start searching to the right, advancing line by line.
+
+
+

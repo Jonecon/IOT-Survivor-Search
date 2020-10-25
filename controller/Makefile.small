@@ -5,9 +5,6 @@
 # name of your application
 APPLICATION = controller
 
-#controller port
-CONTROLLER_PORT ?= 10000
-
 # map information that is available to the controller
 # e.g. may be used in its logic to slice the map among robots
 NUM_LINES ?= 21
@@ -19,26 +16,24 @@ MAX_ROBOTS ?= 15
 # list of IPv6 addresses of robots "addr1,addr2,addr3..."
 # the actual addresses need to be placed here once the robots
 # are started
-ROBOT_ADDRESSES=fe80::5c99:19ff:feec:6dfa,fe80::b412:f1ff:fe61:6e78
+ROBOT_ADDRESSES=fe80::8ed:fff:fe1e:cc25,fe80::e:93ff:fe79:a386
 
 # list of ports that are used by robots. the port number do not 
 # need to change every time. a robot will use the n-th number in the 
 # list (like the ip addresses), where robot 0 is n==0
-ROBOT_PORTS=10000,10001
-
+ROBOT_PORTS=10000,20000
 
 CFLAGS += -DNUM_LINES=$(NUM_LINES)
 CFLAGS += -DNUM_COLUMNS=$(NUM_COLUMNS)
 CFLAGS += -DMAX_ROBOTS=$(MAX_ROBOTS)
 CFLAGS += -DROBOT_ADDRESSES=\"$(ROBOT_ADDRESSES)\"
 CFLAGS += -DROBOT_PORTS=\"$(ROBOT_PORTS)\"
-CFLAGS += -DCONTROLLER_PORT=$(CONTROLLER_PORT)
 
 # If no BOARD is found in the environment, use this default:
 BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../../../../RIOT
+RIOTBASE ?= $(CURDIR)/../..
 
 # Include packages that pull up and auto-init the link layer.
 # NOTE: 6LoWPAN will be included if IEEE802.15.4 devices are present

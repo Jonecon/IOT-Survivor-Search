@@ -1,0 +1,76 @@
+RIOT native interrupts/signals initialized.
+LED_RED_OFF
+LED_GREEN_ON
+RIOT native board initialized.
+RIOT native hardware initialization complete.
+
+main(): This is RIOT! (Version: 2021.01-devel-77-gf6e75)
+Configured network interfaces:
+Iface  5  HWaddr: E6:19:26:F9:4E:82 
+          L2-PDU:1500  MTU:1500  HL:64  RTR  
+          RTR_ADV  
+          Source address length: 6
+          Link type: wired
+          inet6 addr: fe80::e419:26ff:fef9:4e82  scope: link  TNT[1]
+          inet6 group: ff02::2
+          inet6 group: ff02::1
+          inet6 group: ff02::1:fff9:4e82
+          
+RIOT survivor robot application
+
+robot 0 waiting for commands at port 10000)
+All up, running the shell now
+> STA E=19995 POS=(0,0) HEA=4 SRV=.
+DIRECTION_LEFT at 20,1 - ENERGY 178
+DIRECTION_RIGHT at 0,2 - ENERGY 157
+DIRECTION_LEFT at 20,3 - ENERGY 136
+
+
+&@@@         @@@@#         @@@
+   @@@#     @@@@@@@     @@@@  
+     @@@@   #@@@@@    @@@@     
+        @@@@@@@@@@@@@@@        
+          @@@@@@@@@@@          
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@@@@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+           @@@@ @@@@           
+
+robot found survivor at 2,3
+
+DIRECTION_RIGHT at 0,4 - ENERGY 115
+
+
+                                          (@@@@@@&
+                                        *@@      @@&        .        
+                                       /@@        &@&    %  %% %  ./ 
+                                       @@          &@%    #(((/(/%   
+                                      %@&           .@@@@&%((////%/  
+                                  @&&%@@                  %(%//#(%   
+                            .@@@@@@@@@@@@@@&&               %*.%  ,  
+                       &@@@@@@@@@@@@@@@@@@@@(                        
+                    @@@@@%,,,,,,,,,@@@@@@@@@@@@(                     
+                  @@@@*,,,,,*@@@@@@@@@@@@@@@@@@@@#                   
+                @@@@,,,,*(@@@@@@@@@@@@@@@@@@@@@@@@@,                 
+               @@@@,,,,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                
+              .@@@,,,,%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.               
+              @@@,,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+              @@@,,,,/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+              *@@,,,,*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,               
+               @@@,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                
+                @@@,,,,@@@@@@@@@@@@@@@@@@@@@@@@@@@@,                 
+                 .@@(,,,*@@@@@@@@@@@@@@@@@@@@@@@@@,                  
+                    @@@%,,,@@@@@@@@@@@@@@@@@@@@&,                    
+                      .@@@@@@@@@@@@@@@@@@@@@%,                       
+                           .&@@@@@@@@@@(,                            
+
+
+
